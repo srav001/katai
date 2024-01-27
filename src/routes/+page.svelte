@@ -65,10 +65,16 @@
 		} satisfies two
 	]);
 
-	const tes = useStore<Stores['test']>('test');
-	console.log(tes.$value.foo);
+	const tes = useStore<Stores['tes2']>('tes2');
+	console.log(' fo.bar.ba - ', tes.getValue('fo.bar.ba'));
+
+	setInterval(() => {
+		console.log('interval ');
+		tes.writeUpdate('fo.bar.ba', (val) => {
+			return val + 1;
+		});
+	}, 2000);
 </script>
 
-<h1>{store.$value.check.one.two.three}</h1>
 <p>Create your package using @sveltejs/package and preview/showcase your work with SvelteKit</p>
 <p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>

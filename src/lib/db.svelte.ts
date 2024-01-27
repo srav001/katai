@@ -35,7 +35,7 @@ const _cachedTables = new Map([['all', false]]);
 const _stores: Record<string, unknown> = $state({});
 
 /**
- * It creates a Pinia store for the table and caches the table's state if the table is marked as
+ * It creates a store for the table and caches the table's state if the table is marked as
  * cacheable
  * @param {T} table - T extends BasicTable - This is the table that we're creating a store for.
  * @returns A function that takes a table and returns a table.
@@ -209,7 +209,7 @@ function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTab
 		if (!key) {
 			return _key;
 		}
-		if (_host) {
+		if (_host && key.indexOf(_key) !== 0) {
 			return `${_key}.${key}`;
 		}
 
@@ -223,6 +223,7 @@ function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTab
 		_data = (getNestedValue(_stores, getKey(key)) ?? defaultValue ?? undefined) as InferedState;
 
 		return {
+			// @ts-expect-error - TODO: find how to type this
 			value: getClonedValue.bind(this, _data) as <K = unknown>() => GetDbValueIfNotEmpty<
 				InferedState,
 				T,
@@ -232,7 +233,6 @@ function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTab
 	}
 
 	function getValue<T extends DbKeyForDbWithTableInstance<InferedState>, U = unknown>(key?: T) {
-		console.log(_stores, getKey(key));
 		return getNestedValue(_stores, getKey(key)) as GetDbValueIfNotEmpty<InferedState, T, U>;
 	}
 
@@ -245,6 +245,7 @@ function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTab
 		key = getKey(key) as U;
 		const oldData = getNestedValue(_stores, key);
 		const data = callback(deepCloneDbValue(_oldData) as T) as undefined;
+		// @ts-expect-error - TODO: find how to type this
 		const self = this;
 
 		return {
@@ -315,6 +316,7 @@ function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTab
 		subscriber(getValue(key), undefined);
 
 		try {
+			// @ts-expect-error - TODO: find how to type this
 			onDestroy(removeSubscriber.bind(this, key, subscriber as any));
 		} catch (err) {
 			console.log(err);
