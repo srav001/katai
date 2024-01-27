@@ -1,10 +1,10 @@
 # svelte-virtual-store
 
-## In Development
+## ❗️ In Development ❗️
 
 The project is still in heavy development. Hoping to release it right before Svelte 5 release. You can find usable examples in src/routes/+page.svelte.
 
-## createStore Function
+## createStore
 
 The `createStore` function is used to create a new store. It takes two parameters: `table` and `mainTableKey`.
 
@@ -20,21 +20,72 @@ Returns a `Store` object with several methods to interact with the store's state
 ### Example
 
 ```typescript
-// Create a new store
-const userStore = createStore<User>({ name: 'users' });
-
-// Use the store's methods
-userStore.get('username');
-userStore.update('username', 'newUsername');
+// Type system examples
+const store = createStore({
+	name: 'res',
+	state: {
+		check: {
+			one: {
+				two: {
+					three: 'hello'
+				}
+			}
+		}
+	}
+});
 ```
 
-## createStores Function
+```typescript
+const test = store.getValue('check.one.two');
 
-The `createStores` function is used to create a store for each table and a state to store map for each table.
+store.addSubscriber('check.one.two', (test) => {
+	console.log('test - ', test);
+});
+```
+
+Here typeof `test` will be `{ three: string; }`
+
+```typescript
+store.set('check.one.two.three', 0);
+```
+
+This will error as `Argument of type 'number' is not assignable to parameter of type 'string'.`
+
+You can subscribe to store changes for a particular key or for deep changes
+
+```typescript
+store.addSubscriber('check.one.two', (test) => {
+	console.log('test - ', test);
+});
+// This will only run when two property of one object of check object changes
+```
+
+If the value of a key is an POJO then will be able to subscribe deeply with `*` in the key.
+
+```typescript
+store.addSubscriber('check.one.*', (val) => {
+	console.log('check.one.* - ', val);
+});
+// This will run when any change is made to one object and it's children.
+```
+
+This is not possible as the value of `three` is `string`
+
+```typescript
+// You will get the below error
+store.addSubscriber('check.one.two.three.*', (val) => {
+	console.log('check.one.* - ', val);
+});
+// Argument of type '"check.one.two.three.*"' is not assignable to parameter of type '"" | "check" | "check.*" | "check.one" | "check.one.*" | "check.one.two" | "check.one.two.*" | "check.one.two.three"'
+```
+
+## createStores
+
+The `createStores` function is used to create multiple stores at once.
 
 ### Parameters
 
-- `tables` (Tables<S>): An array of tables that you want to create.
+- `tables` (Tables): An array of tables that you want to create.
 - `options` (UseStoreOptions): Options for creating the stores. If `useCache` is true, the cache will be used to store the data.
 
 ### Return Value
@@ -44,12 +95,55 @@ Returns a `StoreInstance` object.
 ### Example
 
 ```typescript
-// Create multiple stores
-const stores = createStores<User>([{ name: 'users' }, { name: 'products' }]);
+type one = {
+	name: 'test';
+	state: {
+		foo: {
+			bar: {
+				baz: string;
+			};
+		};
+	};
+};
 
-// Use the stores' methods
-stores.users.get('username');
-stores.products.get('productId');
+type two = {
+	name: 'tes2';
+	state: {
+		fo: {
+			bar: {
+				ba: number;
+			};
+		};
+	};
+};
+
+type Stores = {
+	test: one['state'];
+	tes2: two['state'];
+};
+
+createStores<Stores>([
+	{
+		name: 'test',
+		state: {
+			foo: {
+				bar: {
+					baz: 'heo'
+				}
+			}
+		}
+	} satisfies one,
+	{
+		name: 'tes2',
+		state: {
+			fo: {
+				bar: {
+					ba: 0
+				}
+			}
+		}
+	} satisfies two
+]);
 ```
 
 ## useStore Function
@@ -72,10 +166,8 @@ const userStore = useStore<User>('users');
 
 // Use the store's methods
 userStore.get('username');
-userStore.update('username', 'newUsername');
+userStore.set('username', 'newUsername');
 ```
-
-Please note that these examples assume that the necessary helper functions (`createState`, `handleCache`, `Store`) and types (`NewTable`, `BasicTable`, `StoreOptions`, `StoreInstance`) are defined in the same scope as the `createStore`, `createStores`, and `useStore` functions.
 
 ## The `Store` object
 
@@ -92,11 +184,11 @@ Returns a `storeObj` object with the following methods:
 - `set(key, value)`: Sets the value of the specified key. If the key does not exist, an error will be thrown.
 - `dropStore(tableKey)`: Deletes the specified table from the store.
 
-## Example
+## Examples
 
 ```javascript
 // Create a new store
-const myStore = Store({ name: 'myTable' });
+const myStore = createStore({ name: 'myTable', state: { myKey: 'value' } });
 
 // Add a subscriber to a key
 myStore.addSubscriber('myKey', (value, oldValue) => {
@@ -107,11 +199,9 @@ myStore.addSubscriber('myKey', (value, oldValue) => {
 myStore.set('myKey', 'newValue');
 
 // Output: "Value of myKey changed from undefined to newValue"
-```
 
-```javascript
 // Create a new store
-const userStore = Store({ name: 'users' });
+const userStore = createStore({ name: 'users', state: { username: 'value' } });
 
 // Add a subscriber to a key
 userStore.addSubscriber('username', (value, oldValue) => {
