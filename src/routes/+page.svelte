@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createStores } from '$lib/db.svelte.js';
+	import { createStores, createStore, useStore } from '$lib/db.svelte.js';
 
 	type one = {
 		name: 'test';
@@ -23,18 +23,32 @@
 		};
 	};
 
+	const store = createStore({
+		name: 'res',
+		state: {
+			check: {
+				one: {
+					two: {
+						three: 'hello'
+					}
+				}
+			}
+		}
+	});
+
+	console.log(store.getValue('check.one.two'));
+
 	type Stores = {
 		test: one['state'];
 		tes2: two['state'];
 	};
-
-	const store = createStores<Stores>([
+	createStores<Stores>([
 		{
 			name: 'test',
 			state: {
 				foo: {
 					bar: {
-						baz: 'hello'
+						baz: 'heo'
 					}
 				}
 			}
@@ -51,27 +65,10 @@
 		} satisfies two
 	]);
 
-	const res = store.get('test.foo').value();
-	console.log(res);
-
-	store.addSubscriber('tes2.*', (value, oldValue) => {
-		console.log(value, oldValue);
-	});
-
-	store.writeUpdate('test.foo.bar.baz', () => 'hi');
-
-	console.log(store.getValue('tes2.fo.bar.ba'));
-
-	setInterval(() => {
-		store.writeUpdate('tes2.fo.bar.ba', (value) => value + 1);
-	}, 1000);
-
-	store.addSubscriber('tes2.fo.bar.ba', (value, oldValue) => {
-		console.log(value, oldValue);
-	});
+	const tes = useStore<Stores['test']>('test');
+	console.log(tes.$value.foo);
 </script>
 
-<h1>{store.$value['tes2']['fo']['bar']['ba']}</h1>
+<h1>{store.$value.check.one.two.three}</h1>
 <p>Create your package using @sveltejs/package and preview/showcase your work with SvelteKit</p>
 <p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
-<h1>{store.getValue('tes2.fo.bar.ba')}</h1>
