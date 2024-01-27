@@ -1,6 +1,8 @@
 # svelte-virtual-store
 
-GitHub Copilot: # Documentation
+## In Development
+
+The project is still in heavy development. Hoping to release it right before Svelte 5 release. You can find usable examples in src/routes/+page.svelte.
 
 ## createStore Function
 
@@ -43,7 +45,7 @@ Returns a `StoreInstance` object.
 
 ```typescript
 // Create multiple stores
-const stores = createStores<User>([{ name: 'users' }, { name: 'products' }], { useCache: true });
+const stores = createStores<User>([{ name: 'users' }, { name: 'products' }]);
 
 // Use the stores' methods
 stores.users.get('username');
@@ -75,7 +77,7 @@ userStore.update('username', 'newUsername');
 
 Please note that these examples assume that the necessary helper functions (`createState`, `handleCache`, `Store`) and types (`NewTable`, `BasicTable`, `StoreOptions`, `StoreInstance`) are defined in the same scope as the `createStore`, `createStores`, and `useStore` functions.
 
-## Return Value
+## The `Store` object
 
 Returns a `storeObj` object with the following methods:
 
