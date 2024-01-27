@@ -174,8 +174,6 @@ function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTab
 	}
 
 	const storeObj = {
-		flush,
-		getKey,
 		get $value() {
 			if (_key) {
 				return _stores[_key] as InferedState;
@@ -187,14 +185,12 @@ function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTab
 		getValue,
 		update,
 		writeUpdate,
-		has,
 		next,
 		addSubscriber,
 		removeSubscriber,
 		unSubscribe,
-		clearSubscribers,
 		set,
-		dropTable
+		dropStore
 	};
 
 	function flush() {
@@ -347,11 +343,6 @@ function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTab
 
 		return storeObj;
 	}
-	function clearSubscribers(): typeof storeObj {
-		_subscribersMap.clear();
-
-		return storeObj;
-	}
 
 	function set<
 		U extends DbKeyForDbWithTableInstance<InferedState>,
@@ -367,7 +358,7 @@ function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTab
 
 		return storeObj;
 	}
-	function dropTable<K extends TableKey<InferedState, string>>(tableKey?: K) {
+	function dropStore<K extends TableKey<InferedState, string>>(tableKey?: K) {
 		if (!_stores[tableKey as string]) {
 			return;
 		}
@@ -413,7 +404,7 @@ function handleCache() {
 }
 
 /**
- * The useDb function is used to read and write data to the store.
+ * The createStore function is used to read and write data to the store.
  * It returns an object with several functions to interact with the store's state,
  * including get, update, write, writeUpdate, next, and has.
  * These functions can be used to read data fromthe store,
@@ -451,7 +442,7 @@ export function createStores<T>(tables?: Tables<T>, options?: UseStoreOptions): 
 }
 
 /**
- * The useDb function is used to read and write data to the state of a store.
+ * The useStore function is used to read and write data to the state of a store.
  * It returns an object with several functions to interact with the store's state,
  * including get, update, write, writeUpdate, next, and has.
  * These functions can be used to read data fromthe store,

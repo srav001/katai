@@ -14,13 +14,13 @@
 		"format": "prettier --write ."
 	},
 	"type": "module",
-	"main": "./dist/index.js",
-	"module": "./dist/index.js",
-	"types": "./dist/index.d.ts",
+	"main": "./dist/db.svelte.js",
+	"module": "./dist/db.svelte.js",
+	"types": "./dist/db.svelte.d.ts",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js"
+			"types": "./dist/db.svelte.d.ts",
+			"import": "./dist/db.svelte.js"
 		}
 	},
 	"files": [
