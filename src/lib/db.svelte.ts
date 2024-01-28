@@ -118,9 +118,7 @@ type StoreOptions<T = unknown> = {
 	host?: boolean;
 } & {};
 
-type DbKeyForDbWithTableInstance<T, U = string> = T extends undefined
-	? U
-	: (PathInto<T> | keyof T) & U;
+type DbKeyForDbWithTableInstance<T, U = string> = T extends undefined ? U : (PathInto<T> | keyof T) & U;
 
 type DbKeyForSubs<T, U = string> = T extends undefined
 	? U
@@ -212,19 +210,12 @@ function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTab
 		return key;
 	}
 
-	function get<T extends DbKeyForDbWithTableInstance<InferedState>>(
-		key: T,
-		defaultValue?: unknown
-	) {
+	function get<T extends DbKeyForDbWithTableInstance<InferedState>>(key: T, defaultValue?: unknown) {
 		_data = (getNestedValue(_stores, getKey(key)) ?? defaultValue ?? undefined) as InferedState;
 
 		return {
 			// @ts-expect-error - TODO: find how to type this
-			value: getClonedValue.bind(this, _data) as <K = unknown>() => GetDbValueIfNotEmpty<
-				InferedState,
-				T,
-				K
-			>
+			value: getClonedValue.bind(this, _data) as <K = unknown>() => GetDbValueIfNotEmpty<InferedState, T, K>
 		};
 	}
 
@@ -291,10 +282,7 @@ function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTab
 
 	function addSubscriber<U extends DbKeyForSubs<InferedState>, T = undefined>(
 		key: U | '',
-		subscriber: Subscriber<
-			GetDbValueIfNotEmpty<InferedState, U, T>,
-			GetDbValueIfNotEmpty<InferedState, U, T>
-		>
+		subscriber: Subscriber<GetDbValueIfNotEmpty<InferedState, U, T>, GetDbValueIfNotEmpty<InferedState, U, T>>
 	): typeof storeObj {
 		key = getKey(key) as U;
 		if (!_subscribersMap.has(key as string)) {
@@ -323,10 +311,7 @@ function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTab
 
 	function removeSubscriber<U extends DbKeyForSubs<InferedState>, T = undefined>(
 		key: U | '',
-		subscriber: Subscriber<
-			GetDbValueIfNotEmpty<InferedState, U, T>,
-			GetDbValueIfNotEmpty<InferedState, U, T>
-		>
+		subscriber: Subscriber<GetDbValueIfNotEmpty<InferedState, U, T>, GetDbValueIfNotEmpty<InferedState, U, T>>
 	): typeof storeObj {
 		key = getKey(key) as U;
 		if (_subscribersMap.has(key as string)) {
@@ -410,10 +395,7 @@ function handleCache() {
  * These functions can be used to read data fromthe store,
  *  update the store's data, write new data to the store, and subscribe to changes in the store's data.
  */
-export function createStore<T, K extends string | undefined = undefined>(
-	table: NewTable<T>,
-	mainTableKey?: K
-) {
+export function createStore<T, K extends string | undefined = undefined>(table: NewTable<T>, mainTableKey?: K) {
 	return Store(table, mainTableKey);
 }
 
@@ -425,10 +407,7 @@ type UseStoreOptions = Omit<StoreOptions, 'table' | 'host'>;
  * @param tables - An array of tables that you want to create.
  * @param [useCache=false] - If true, the cache will be used to store the data.
  */
-export function createStores<T, S = unknown>(
-	tables: Tables<S>,
-	options?: UseStoreOptions
-): StoreInstance<T>;
+export function createStores<T, S = unknown>(tables: Tables<S>, options?: UseStoreOptions): StoreInstance<T>;
 export function createStores<T>(tables?: Tables<T>, options?: UseStoreOptions): StoreInstance<T> {
 	if (tables && tables.length > 0) {
 		for (const table of tables) {

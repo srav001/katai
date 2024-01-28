@@ -86,9 +86,7 @@ export function set(objectToUpdate: BasicObject, path: string, value: unknown) {
  * @returns The value of the property at the end of the path.
  */
 export function get<T>(objectToRead: BasicObject, path: string) {
-	return getOrSetNestedValueInObject(objectToRead, path) as T extends null | undefined
-		? undefined
-		: T;
+	return getOrSetNestedValueInObject(objectToRead, path) as T extends null | undefined ? undefined : T;
 }
 
 /**
@@ -99,11 +97,7 @@ export function get<T>(objectToRead: BasicObject, path: string) {
  * @returns A promise that resolves to the result of the function.
  */
 // eslint-disable-next-line @typescript-eslint/ban-types
-export async function dynamicallyExecuteFunction<T = unknown>(
-	func: Function,
-	arg1: unknown,
-	arg2: unknown
-) {
+export async function dynamicallyExecuteFunction<T = unknown>(func: Function, arg1: unknown, arg2: unknown) {
 	try {
 		const result = func(arg1, arg2);
 		if (result instanceof Promise) {

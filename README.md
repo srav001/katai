@@ -10,8 +10,8 @@ The `createStore` function is used to create a new store. It takes two parameter
 
 ### Parameters
 
-- `table` (NewTable<T>): The table object to create the store from.
-- `mainTableKey` (K): The key of the main table.
+-   `table` (NewTable<T>): The table object to create the store from.
+-   `mainTableKey` (K): The key of the main table.
 
 ### Return Value
 
@@ -85,8 +85,8 @@ The `createStores` function is used to create multiple stores at once.
 
 ### Parameters
 
-- `tables` (Tables): An array of tables that you want to create.
-- `options` (UseStoreOptions): Options for creating the stores. If `useCache` is true, the cache will be used to store the data.
+-   `tables` (Tables): An array of tables that you want to create.
+-   `options` (UseStoreOptions): Options for creating the stores. If `useCache` is true, the cache will be used to store the data.
 
 ### Return Value
 
@@ -152,7 +152,7 @@ The `useStore` function is used to read and write data to the state of a store.
 
 ### Parameters
 
-- `storeName` (string): The name of the store.
+-   `storeName` (string): The name of the store.
 
 ### Return Value
 
@@ -173,16 +173,16 @@ userStore.set('username', 'newUsername');
 
 Returns a `storeObj` object with the following methods:
 
-- `get(key, defaultValue)`: Returns a getter object for the specified key. If the key does not exist, the `defaultValue` will be used.
-- `getValue(key)`: Returns the value of the specified key in the store.
-- `update(key, callback)`: Updates the value of the specified key using the provided callback function.
-- `writeUpdate(key, callback)`: Similar to `update`, but writes the updated value back to the store.
-- `next(callback, key)`: Calls the provided callback function with the value of the specified key.
-- `addSubscriber(key, subscriber)`: Adds a subscriber function to the specified key.
-- `removeSubscriber(key, subscriber)`: Removes a subscriber function from the specified key.
-- `unSubscribe(key)`: Removes all subscribers from the specified key.
-- `set(key, value)`: Sets the value of the specified key. If the key does not exist, an error will be thrown.
-- `dropStore(tableKey)`: Deletes the specified table from the store.
+-   `get(key, defaultValue)`: Returns a getter object for the specified key. If the key does not exist, the `defaultValue` will be used.
+-   `getValue(key)`: Returns the value of the specified key in the store.
+-   `update(key, callback)`: Updates the value of the specified key using the provided callback function.
+-   `writeUpdate(key, callback)`: Similar to `update`, but writes the updated value back to the store.
+-   `next(callback, key)`: Calls the provided callback function with the value of the specified key.
+-   `addSubscriber(key, subscriber)`: Adds a subscriber function to the specified key.
+-   `removeSubscriber(key, subscriber)`: Removes a subscriber function from the specified key.
+-   `unSubscribe(key)`: Removes all subscribers from the specified key.
+-   `set(key, value)`: Sets the value of the specified key. If the key does not exist, an error will be thrown.
+-   `dropStore(tableKey)`: Deletes the specified table from the store.
 
 ## Examples
 

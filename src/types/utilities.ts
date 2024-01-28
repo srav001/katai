@@ -33,10 +33,7 @@ export type PathIntoDeep<Obj> = {
 			: K | `${K}.*`;
 }[keyof Obj];
 
-export type GetDeepValue<
-	T,
-	Key extends PathInto<T> | unknown
-> = Key extends `${infer K}.${infer Rest}`
+export type GetDeepValue<T, Key extends PathInto<T> | unknown> = Key extends `${infer K}.${infer Rest}`
 	? K extends keyof T
 		? GetDeepValue<T[K], Rest>
 		: never
@@ -44,7 +41,5 @@ export type GetDeepValue<
 		? T[Key]
 		: never;
 
-type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
-	? I
-	: never;
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
 export type IsUnion<T> = [T] extends [UnionToIntersection<T>] ? false : true;
