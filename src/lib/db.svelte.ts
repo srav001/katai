@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { getFromCache, setToCache } from './cache-adapter.js';
-import { deepClone, get as getNestedValue, set as setNestedValue } from './utilites.js';
+import { onDestroy } from 'svelte';
 import type {
 	GenericArray,
 	GenericObject,
@@ -10,7 +9,8 @@ import type {
 	Prettier,
 	PrimitiveTypes
 } from '../types/utilities.ts';
-import { onDestroy } from 'svelte';
+import { getFromCache, setToCache } from './cache-adapter.js';
+import { deepClone, get as getNestedValue, set as setNestedValue } from './utilites.js';
 
 export type TypesOfState = Record<string, PrimitiveTypes | GenericArray | GenericObject>;
 export type BasicTable<T = TypesOfState> = {
