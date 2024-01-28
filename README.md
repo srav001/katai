@@ -42,7 +42,7 @@ store.addSubscriber('check.one.two', (test) => {
 	console.log('test - ', test);
 });
 ```
-
+ 
 Here typeof `test` will be `{ three: string; }`
 
 ```typescript
