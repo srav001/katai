@@ -22,7 +22,7 @@ Returns a `Store` object with several methods to interact with the store's state
 ```typescript
 // Type system examples
 const store = createStore({
-	name: 'res',
+ name: 'res',
 	state: {
 		check: {
 			one: {
