@@ -51,7 +51,7 @@ store.set('check.one.two.three', 0);
 
 This will error as `Argument of type 'number' is not assignable to parameter of type 'string'.`
 
-You can subscribe to store changes for a particular key or for deep changes
+You can subscribe to store changes for `a particular key` or for `deep changes`. When used inside `Svelte` component they will be `unSubscribed(auto-cleaned up)`.
 
 ```typescript
 store.addSubscriber('check.one.two', (test) => {
