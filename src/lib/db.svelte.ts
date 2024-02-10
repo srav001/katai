@@ -27,7 +27,7 @@ function deepCloneDbValue<InferredType>(val: InferredType): InferredType {
 	return deepClone(val);
 }
 
-const CACHE_KEY = 'cache-db';
+const CACHE_KEY = 'katai-';
 
 // eslint-disable-next-line sonarjs/no-unused-collection
 const _cachedTables = new Map([['all', false]]);
