@@ -133,29 +133,10 @@ type GetDbValueIfNotEmpty<State, Key, T> = State extends undefined
 
 type TableKey<State, K = string> = State extends undefined ? K : keyof State;
 
-function getClonedValue(data: unknown) {
-	const val = deepCloneDbValue(data);
-	// @ts-expect-error - this related error
-	this.flush();
-	return val;
-}
-
-function writeClonedValue(key: string, data: any, oldData: any, callback?: (data: any) => void) {
-	setNestedValue(_stores, key, data);
-	if (callback) {
-		callback(deepCloneDbValue(data));
-	}
-	handleCacheOfStore(key);
-	runSubscribers(key, data, oldData);
-	// @ts-expect-error - this related error
-	this.flush();
-}
-
 function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTable?: string) {
 	let _host = false;
 	let _key = '' as string;
 	let _oldData = undefined as InferedState | undefined;
-	let _data = undefined as InferedState | undefined;
 
 	if (table) {
 		createState(table as BasicTable);
@@ -180,14 +161,12 @@ function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTab
 			return _stores as InferedState;
 		},
 		get,
-		getValue,
-		update,
-		writeUpdate,
-		next,
-		addSubscriber,
-		removeSubscriber,
-		unSubscribe,
 		set,
+		update,
+		next,
+		subscribe,
+		unsubscribe,
+		removeSubscribers,
 		dropStore
 	};
 
@@ -195,7 +174,6 @@ function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTab
 		if (!_host) {
 			_key = '';
 		}
-		_data = undefined;
 		_oldData = undefined;
 	}
 
@@ -210,39 +188,11 @@ function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTab
 		return key;
 	}
 
-	function get<T extends DbKeyForDbWithTableInstance<InferedState>>(key: T, defaultValue?: unknown) {
-		_data = (getNestedValue(_stores, getKey(key)) ?? defaultValue ?? undefined) as InferedState;
-
-		return {
-			// @ts-expect-error - TODO: find how to type this
-			value: getClonedValue.bind(this, _data) as <K = unknown>() => GetDbValueIfNotEmpty<InferedState, T, K>
-		};
-	}
-
-	function getValue<T extends DbKeyForDbWithTableInstance<InferedState>, U = unknown>(key?: T) {
+	function get<T extends DbKeyForDbWithTableInstance<InferedState>, U = unknown>(key?: T) {
 		return getNestedValue(_stores, getKey(key)) as GetDbValueIfNotEmpty<InferedState, T, U>;
 	}
 
 	function update<
-		U extends DbKeyForDbWithTableInstance<InferedState>,
-		K = unknown,
-		// @ts-expect-error better to keep optional second in this case
-		T extends GetDbValueIfNotEmpty<InferedState, U, K>
-	>(key: U, callback: (data: T) => T) {
-		key = getKey(key) as U;
-		const oldData = getNestedValue(_stores, key);
-		const data = callback(deepCloneDbValue(_oldData) as T) as undefined;
-		// @ts-expect-error - TODO: find how to type this
-		const self = this;
-
-		return {
-			write: function (callback?: (data: T) => void) {
-				writeClonedValue.call(self, key, data, oldData, callback);
-			}
-		};
-	}
-
-	function writeUpdate<
 		U extends DbKeyForDbWithTableInstance<InferedState>,
 		K = unknown,
 		// @ts-expect-error better to keep optional second in this case
@@ -280,7 +230,7 @@ function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTab
 		return storeObj;
 	}
 
-	function addSubscriber<U extends DbKeyForSubs<InferedState>, T = undefined>(
+	function subscribe<U extends DbKeyForSubs<InferedState>, T = undefined>(
 		key: U | '',
 		subscriber: Subscriber<GetDbValueIfNotEmpty<InferedState, U, T>, GetDbValueIfNotEmpty<InferedState, U, T>>
 	): typeof storeObj {
@@ -309,7 +259,7 @@ function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTab
 		return storeObj;
 	}
 
-	function removeSubscriber<U extends DbKeyForSubs<InferedState>, T = undefined>(
+	function unsubscribe<U extends DbKeyForSubs<InferedState>, T = undefined>(
 		key: U | '',
 		subscriber: Subscriber<GetDbValueIfNotEmpty<InferedState, U, T>, GetDbValueIfNotEmpty<InferedState, U, T>>
 	): typeof storeObj {
@@ -322,7 +272,7 @@ function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTab
 		return storeObj;
 	}
 
-	function unSubscribe<T extends DbKeyForSubs<InferedState>>(key?: T): typeof storeObj {
+	function removeSubscribers<T extends DbKeyForSubs<InferedState>>(key?: T): typeof storeObj {
 		key = getKey(key) as T;
 		_subscribersMap.delete(key);
 
@@ -336,7 +286,7 @@ function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTab
 		T extends GetDbValueIfNotEmpty<InferedState, U, K>
 	>(key: U, value: T): typeof storeObj {
 		if (has(key)) {
-			writeUpdate(key, () => value as GetDbValueIfNotEmpty<InferedState, U, TypesOfState>);
+			update(key, () => value as GetDbValueIfNotEmpty<InferedState, U, TypesOfState>);
 		} else {
 			throw new Error(`Key ${key} does not exist`);
 		}
@@ -374,7 +324,7 @@ function handleCache() {
 	if (stores) {
 		const dbInstance = Store();
 		Object.keys(stores).forEach(function (storeName: string) {
-			dbInstance.writeUpdate(storeName, function (data: unknown) {
+			dbInstance.update(storeName, function (data: unknown) {
 				data = stores[storeName];
 
 				return data;

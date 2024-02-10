@@ -1,8 +1,10 @@
-# svelte-virtual-store
+# katai
 
 ## ❗️ In Development ❗️
 
 The project is still in heavy development. Hoping to release it right before Svelte 5 release. You can find usable examples in src/routes/+page.svelte.
+
+Katai (meaning store in Tamil) is a simple state manager for Svelte 5. It builds on top of the familiar APIs of Svelte 3 & 4 stores while offering more functionality.
 
 ## createStore
 
@@ -15,7 +17,7 @@ The `createStore` function is used to create a new store. It takes two parameter
 
 ### Return Value
 
-Returns a `Store` object with several methods to interact with the store's state, including `get`, `update`, `write`, `writeUpdate`, `next`, and `has`.
+Returns a `Store` object with several methods to interact with the store's state, including `get`, `set`, `update`, `next`, and `has`.
 
 ### Example
 
@@ -36,9 +38,9 @@ const store = createStore({
 ```
 
 ```typescript
-const test = store.getValue('check.one.two');
+const test = store.get('check.one.two');
 
-store.addSubscriber('check.one.two', (test) => {
+store.subscribe('check.one.two', (test) => {
 	console.log('test - ', test);
 });
 ```
@@ -54,7 +56,7 @@ This will error as `Argument of type 'number' is not assignable to parameter of 
 You can subscribe to store changes for `a particular key` or for `deep changes`. When used inside `Svelte` component they will be `unSubscribed(auto-cleaned up)`.
 
 ```typescript
-store.addSubscriber('check.one.two', (test) => {
+store.subscribe('check.one.two', (test) => {
 	console.log('test - ', test);
 });
 // This will only run when two property of one object of check object changes
@@ -63,7 +65,7 @@ store.addSubscriber('check.one.two', (test) => {
 If the value of a key is an POJO then will be able to subscribe deeply with `*` in the key.
 
 ```typescript
-store.addSubscriber('check.one.*', (val) => {
+store.subscribe('check.one.*', (val) => {
 	console.log('check.one.* - ', val);
 });
 // This will run when any change is made to one object and it's children.
@@ -73,7 +75,7 @@ This is not possible as the value of `three` is `string`
 
 ```typescript
 // You will get the below error
-store.addSubscriber('check.one.two.three.*', (val) => {
+store.subscribe('check.one.two.three.*', (val) => {
 	console.log('check.one.* - ', val);
 });
 // Argument of type '"check.one.two.three.*"' is not assignable to parameter of type '"" | "check" | "check.*" | "check.one" | "check.one.*" | "check.one.two" | "check.one.two.*" | "check.one.two.three"'
@@ -173,15 +175,13 @@ userStore.set('username', 'newUsername');
 
 Returns a `storeObj` object with the following methods:
 
--   `get(key, defaultValue)`: Returns a getter object for the specified key. If the key does not exist, the `defaultValue` will be used.
--   `getValue(key)`: Returns the value of the specified key in the store.
--   `update(key, callback)`: Updates the value of the specified key using the provided callback function.
--   `writeUpdate(key, callback)`: Similar to `update`, but writes the updated value back to the store.
--   `next(callback, key)`: Calls the provided callback function with the value of the specified key.
--   `addSubscriber(key, subscriber)`: Adds a subscriber function to the specified key.
--   `removeSubscriber(key, subscriber)`: Removes a subscriber function from the specified key.
--   `unSubscribe(key)`: Removes all subscribers from the specified key.
+-   `get(key, defaultValue)`: Returns the value of the specified key in the store.
 -   `set(key, value)`: Sets the value of the specified key. If the key does not exist, an error will be thrown.
+-   `update(key, callback)`: Updates the value of the specified key using the provided callback function.
+-   `next(callback, key)`: Calls the provided callback function with the value of the specified key.
+-   `subscribe(key, subscriber)`: Adds a subscriber function to the specified key.
+-   `unsubscribe(key, subscriber)`: Removes a subscriber function from the specified key.
+-   `removeSubscribers(key)`: Removes all subscribers from the specified key.
 -   `dropStore(tableKey)`: Deletes the specified table from the store.
 
 ## Examples
@@ -191,7 +191,7 @@ Returns a `storeObj` object with the following methods:
 const myStore = createStore({ name: 'myTable', state: { myKey: 'value' } });
 
 // Add a subscriber to a key
-myStore.addSubscriber('myKey', (value, oldValue) => {
+myStore.subscribe('myKey', (value, oldValue) => {
 	console.log(`Value of myKey changed from ${oldValue} to ${value}`);
 });
 
@@ -204,7 +204,7 @@ myStore.set('myKey', 'newValue');
 const userStore = createStore({ name: 'users', state: { username: 'value' } });
 
 // Add a subscriber to a key
-userStore.addSubscriber('username', (value, oldValue) => {
+userStore.subscribe('username', (value, oldValue) => {
 	console.log(`Username changed from ${oldValue} to ${value}`);
 });
 
@@ -214,7 +214,7 @@ userStore.set('username', 'newUsername');
 // Output: "Username changed from undefined to newUsername"
 
 // Update the value of a key
-userStore.update('username', (oldValue) => oldValue + '_updated').write(() => {});
+userStore.update('username', (oldValue) => oldValue + '_updated');
 
 // Output: "Username changed from newUsername to newUsername_updated"
 
@@ -225,10 +225,10 @@ console.log(userStore.has('username')); // Output: true
 console.log(userStore.get('username').value()); // Output: newUsername_updated
 
 // Remove a subscriber from a key
-userStore.removeSubscriber('username', subscriberFunction);
+userStore.unsubscribe('username', subscriberFunction);
 
 // Unsubscribe all subscribers from a key
-userStore.unSubscribe('username');
+userStore.removeSubscribers('username');
 
 // Drop a table from the store
 userStore.dropStore('users');
