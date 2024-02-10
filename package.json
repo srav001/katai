@@ -3,7 +3,7 @@
 	"version": "0.0.1",
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build && npm run package",
+		"build": "npm run package",
 		"preview": "vite preview",
 		"package": "svelte-kit sync && svelte-package -o dist && publint",
 		"prepublishOnly": "npm run package",
