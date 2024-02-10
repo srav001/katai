@@ -4,6 +4,8 @@
 
 The project is still in heavy development. Hoping to release it right before Svelte 5 release. You can find usable examples in src/routes/+page.svelte.
 
+Katai (meaning store in Tamil) is a simple state manager for Svelte 5. It builds on top of the familiar APIs of Svelte 3 & 4 stores while offering more functionality.
+
 ## createStore
 
 The `createStore` function is used to create a new store. It takes two parameters: `table` and `mainTableKey`.
