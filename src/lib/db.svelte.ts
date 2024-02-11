@@ -113,10 +113,15 @@ function handleCacheOfStore(key: string) {
 type NewTable<T> = Prettier<BasicTable<T>>;
 
 type StoreOptions<T = unknown> = {
-	useCache?: boolean;
+	cache?: {
+		key: string;
+		adapter: {
+			getFromCache: <U>(key: string) => U;
+			setToCache: (key: string, data: T) => void;
+		};
+	};
 	table?: NewTable<T>;
-	host?: boolean;
-} & {};
+};
 
 type DbKeyForDbWithTableInstance<T, U = string> = T extends undefined ? U : (PathInto<T> | keyof T) & U;
 
@@ -133,7 +138,7 @@ type GetDbValueIfNotEmpty<State, Key, T> = State extends undefined
 
 type TableKey<State, K = string> = State extends undefined ? K : keyof State;
 
-function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTable?: string) {
+function store<InferedState = undefined>(table?: NewTable<InferedState>, mainTable?: string) {
 	let _host = false;
 	let _key = '' as string;
 	let _oldData = undefined as InferedState | undefined;
@@ -312,31 +317,7 @@ function Store<InferedState = undefined>(table?: NewTable<InferedState>, mainTab
 	return storeObj;
 }
 
-export type StoreInstance<T = undefined> = ReturnType<typeof Store<T>>;
-
-/**
- * It checks if there's a cache, if there is, it updates the state of the stores with the cached data,
- * if there isn't, it caches the current state of the stores
- */
-function handleCache() {
-	_cachedTables.set('all', true);
-	const stores = getFromCache<TypesOfState>(CACHE_KEY);
-	if (stores) {
-		const dbInstance = Store();
-		Object.keys(stores).forEach(function (storeName: string) {
-			dbInstance.update(storeName, function (data: unknown) {
-				data = stores[storeName];
-
-				return data;
-			});
-		});
-	} else {
-		// _stores.forEach(function (store, storeName) {
-		// 	const storeInstance = store();
-		// 	setToCache(storeInstance.$state, storeName);
-		// });
-	}
-}
+export type StoreInstance<T = undefined> = ReturnType<typeof store<T>>;
 
 /**
  * The createStore function is used to read and write data to the store.
@@ -346,28 +327,7 @@ function handleCache() {
  *  update the store's data, write new data to the store, and subscribe to changes in the store's data.
  */
 export function createStore<T, K extends string | undefined = undefined>(table: NewTable<T>, mainTableKey?: K) {
-	return Store(table, mainTableKey);
-}
-
-type Tables<T> = T & Array<BasicTable>;
-
-type UseStoreOptions = Omit<StoreOptions, 'table' | 'host'>;
-/**
- * It creates a store for each table and a state to store map for each table
- * @param tables - An array of tables that you want to create.
- * @param [useCache=false] - If true, the cache will be used to store the data.
- */
-export function createStores<T, S = unknown>(tables: Tables<S>, options?: UseStoreOptions): StoreInstance<T>;
-export function createStores<T>(tables?: Tables<T>, options?: UseStoreOptions): StoreInstance<T> {
-	if (tables && tables.length > 0) {
-		for (const table of tables) {
-			createState(table as BasicTable);
-		}
-		if (options?.useCache) {
-			handleCache();
-		}
-	}
-	return Store<T>();
+	return store(table, mainTableKey);
 }
 
 /**
@@ -378,5 +338,5 @@ export function createStores<T>(tables?: Tables<T>, options?: UseStoreOptions): 
  *  update the store's data, write new data to the store, and subscribe to changes in the store's data.
  */
 export function useStore<T>(storeName: string): StoreInstance<T> {
-	return Store<T>(undefined, storeName);
+	return store<T>(undefined, storeName);
 }

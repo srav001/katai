@@ -1,17 +1,6 @@
 <script lang="ts">
-	import { createStores, createStore, useStore } from '$lib/db.svelte.js';
+	import { createStore, useStore } from '$lib/db.svelte.js';
 	import Test from './test.svelte';
-
-	type one = {
-		name: 'test';
-		state: {
-			foo: {
-				bar: {
-					baz: string;
-				};
-			};
-		};
-	};
 
 	type two = {
 		name: 'tes2';
@@ -37,41 +26,28 @@
 		}
 	});
 
-	console.log(store.getValue('check.one.two'));
+	console.log(store.get('check.one.two'));
 
 	type Stores = {
-		test: one['state'];
 		tes2: two['state'];
 	};
-	createStores<Stores>([
-		{
-			name: 'test',
-			state: {
-				foo: {
-					bar: {
-						baz: 'heo'
-					}
+	createStore({
+		name: 'tes2',
+		state: {
+			fo: {
+				bar: {
+					ba: 0
 				}
 			}
-		} satisfies one,
-		{
-			name: 'tes2',
-			state: {
-				fo: {
-					bar: {
-						ba: 0
-					}
-				}
-			}
-		} satisfies two
-	]);
+		}
+	} satisfies two);
 
 	const tes = useStore<Stores['tes2']>('tes2');
-	console.log(' fo.bar.ba - ', tes.getValue('fo.bar.ba'));
+	console.log(' fo.bar.ba - ', tes.get('fo.bar.ba'));
 
 	setInterval(() => {
 		console.log('interval ');
-		tes.writeUpdate('fo.bar.ba', (val) => {
+		tes.update('fo.bar.ba', (val) => {
 			return val + 1;
 		});
 	}, 2000);

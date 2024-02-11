@@ -23,6 +23,29 @@ Returns a `Store` object with several methods to interact with the store's state
 
 ```typescript
 // Type system examples
+
+type one = {
+	name: 'test';
+	state: {
+		foo: {
+			bar: {
+				baz: string;
+			};
+		};
+	};
+};
+
+createStore({
+	name: 'test',
+	state: {
+		foo: {
+			bar: {
+				baz: 'heo'
+			}
+		}
+	}
+} satisfies one);
+
 const store = createStore({
 	name: 'res',
 	state: {
@@ -79,73 +102,6 @@ store.subscribe('check.one.two.three.*', (val) => {
 	console.log('check.one.* - ', val);
 });
 // Argument of type '"check.one.two.three.*"' is not assignable to parameter of type '"" | "check" | "check.*" | "check.one" | "check.one.*" | "check.one.two" | "check.one.two.*" | "check.one.two.three"'
-```
-
-## createStores
-
-The `createStores` function is used to create multiple stores at once.
-
-### Parameters
-
--   `tables` (Tables): An array of tables that you want to create.
--   `options` (UseStoreOptions): Options for creating the stores. If `useCache` is true, the cache will be used to store the data.
-
-### Return Value
-
-Returns a `StoreInstance` object.
-
-### Example
-
-```typescript
-type one = {
-	name: 'test';
-	state: {
-		foo: {
-			bar: {
-				baz: string;
-			};
-		};
-	};
-};
-
-type two = {
-	name: 'tes2';
-	state: {
-		fo: {
-			bar: {
-				ba: number;
-			};
-		};
-	};
-};
-
-type Stores = {
-	test: one['state'];
-	tes2: two['state'];
-};
-
-createStores<Stores>([
-	{
-		name: 'test',
-		state: {
-			foo: {
-				bar: {
-					baz: 'heo'
-				}
-			}
-		}
-	} satisfies one,
-	{
-		name: 'tes2',
-		state: {
-			fo: {
-				bar: {
-					ba: 0
-				}
-			}
-		}
-	} satisfies two
-]);
 ```
 
 ## useStore Function
