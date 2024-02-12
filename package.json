@@ -14,20 +14,21 @@
 		"format": "prettier --write ."
 	},
 	"type": "module",
-	"main": "./dist/db.svelte.js",
-	"module": "./dist/db.svelte.js",
-	"types": "./dist/db.svelte.d.ts",
+	"main": "./dist/index.js",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
 	"exports": {
 		".": {
-			"types": "./dist/db.svelte.d.ts",
-			"import": "./dist/db.svelte.js"
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
 		}
 	},
 	"files": [
 		"dist"
 	],
 	"peerDependencies": {
-		"svelte": ">=5.0.0"
+		"svelte": ">=5.0.0",
+		"idb-keyval": "^6.2.1"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-static": "^3.0.1",
@@ -42,6 +43,7 @@
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-sonarjs": "^0.23.0",
 		"eslint-plugin-svelte": "^2.30.0",
+		"idb-keyval": "^6.2.1",
 		"prettier": "^3.1.1",
 		"prettier-plugin-organize-imports": "^3.2.4",
 		"prettier-plugin-svelte": "^3.1.2",

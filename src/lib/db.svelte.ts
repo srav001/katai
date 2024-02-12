@@ -9,11 +9,10 @@ import type {
 	Prettier,
 	PrimitiveTypes
 } from '../types/utilities.ts';
-import { getFromCache, setToCache } from './cache-adapter.js';
 import { deepClone, get as getNestedValue, set as setNestedValue } from './utilites.js';
 
 export type TypesOfState = Record<string, PrimitiveTypes | GenericArray | GenericObject>;
-export type BasicTable<T = TypesOfState> = {
+export type BasicStore<T = TypesOfState> = {
 	name: string;
 	state: T;
 	useCache?: boolean;
@@ -28,32 +27,51 @@ function deepCloneDbValue<InferredType>(val: InferredType): InferredType {
 }
 
 const CACHE_KEY = 'katai-';
-
+type CacheOptons = {
+	key?: string;
+	adapter: {
+		getFromCache: <U>(key: string) => Promise<U | undefined>;
+		setToCache: (key: string, data: any) => void;
+	};
+};
 // eslint-disable-next-line sonarjs/no-unused-collection
-const _cachedTables = new Map([['all', false]]);
+const _cachedStoresMap = new Map<string, CacheOptons>();
+function getCacheKey(storeName: string) {
+	if (_cachedStoresMap.has(storeName)) {
+		return `${CACHE_KEY}-${storeName}-${_cachedStoresMap.get(storeName)!.key}`;
+	}
+	return undefined;
+}
 
 const _stores: Record<string, unknown> = $state({});
 
 /**
  * It creates a store for the table and caches the table's state if the table is marked as
  * cacheable
- * @param {T} table - T extends BasicTable - This is the table that we're creating a store for.
+ * @param {T} store - T extends BasicStore - This is the table that we're creating a store for.
  * @returns A function that takes a table and returns a table.
  */
-function createState<T extends BasicTable>(table: T) {
-	if (table.useCache) {
-		_cachedTables.set(table.name, true);
-		const cachedData = getFromCache(table.name);
-		if (cachedData) {
-			_stores[table.name] = cachedData;
-
-			return table;
+function createState<T extends BasicStore>(store: T, options?: StoreOptions) {
+	if (options?.cache?.adapter) {
+		if (!options?.cache?.key) {
+			options.cache.key = store.name;
 		}
-		setToCache(table.name, table.state);
+		_cachedStoresMap.set(options?.cache.key, options.cache);
+		options.cache.adapter.getFromCache(options!.cache.key).then((data) => {
+			if (data) {
+				_stores[store.name] = data;
+			} else {
+				_stores[store.name] = store.state;
+				options.cache?.adapter.setToCache(options!.cache.key!, store.state);
+			}
+		});
+		return store;
+	} else if (options?.cache?.key && !options?.cache?.adapter) {
+		throw new Error(`Cache adapter is not provided for ${store.name} Store`);
 	}
-	_stores[table.name] = table.state;
+	_stores[store.name] = store.state;
 
-	return table;
+	return store;
 }
 
 type Subscriber<T = unknown, U = unknown> = (value: T, oldValue: U) => Promise<void> | void;
@@ -101,26 +119,18 @@ function runSubscribers(key: string, data: unknown, oldData: unknown) {
  * @param {string} key - The key of the store that was updated.
  */
 function handleCacheOfStore(key: string) {
-	const tableName = key.split('.')[0];
+	const storeName = key.split('.')[0];
 
-	if (_cachedTables.get('all') || _cachedTables.get(tableName)) {
-		const storeName = tableName;
-		const state = _stores[storeName];
-		setToCache(storeName, state);
+	if (_cachedStoresMap.has(storeName)) {
+		const cacheAdapter = _cachedStoresMap.get(storeName)!.adapter;
+		cacheAdapter.setToCache(storeName, _stores[storeName]);
 	}
 }
 
-type NewTable<T> = Prettier<BasicTable<T>>;
+type NewTable<T> = Prettier<BasicStore<T>>;
 
 type StoreOptions<T = unknown> = {
-	cache?: {
-		key: string;
-		adapter: {
-			getFromCache: <U>(key: string) => U;
-			setToCache: (key: string, data: T) => void;
-		};
-	};
-	table?: NewTable<T>;
+	cache?: CacheOptons;
 };
 
 type DbKeyForDbWithTableInstance<T, U = string> = T extends undefined ? U : (PathInto<T> | keyof T) & U;
@@ -138,13 +148,13 @@ type GetDbValueIfNotEmpty<State, Key, T> = State extends undefined
 
 type TableKey<State, K = string> = State extends undefined ? K : keyof State;
 
-function store<InferedState = undefined>(table?: NewTable<InferedState>, mainTable?: string) {
+function store<InferedState = undefined>(table?: NewTable<InferedState>, mainTable?: string, options?: StoreOptions) {
 	let _host = false;
 	let _key = '' as string;
 	let _oldData = undefined as InferedState | undefined;
 
 	if (table) {
-		createState(table as BasicTable);
+		createState(table as BasicStore, options);
 		if (table.name) {
 			mainTable = table.name;
 		}
@@ -310,6 +320,7 @@ function store<InferedState = undefined>(table?: NewTable<InferedState>, mainTab
 			}
 		}
 		_subscribersMap.delete(`${tableKey as string}.*`);
+		_cachedStoresMap.delete(tableKey as string);
 
 		delete _stores[tableKey as string];
 	}
@@ -326,8 +337,8 @@ export type StoreInstance<T = undefined> = ReturnType<typeof store<T>>;
  * These functions can be used to read data fromthe store,
  *  update the store's data, write new data to the store, and subscribe to changes in the store's data.
  */
-export function createStore<T, K extends string | undefined = undefined>(table: NewTable<T>, mainTableKey?: K) {
-	return store(table, mainTableKey);
+export function createStore<T>(table: NewTable<T>, options: StoreOptions) {
+	return store(table, undefined, options);
 }
 
 /**
