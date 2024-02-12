@@ -55,11 +55,12 @@ function createState<T extends BasicStore>(store: T, options?: StoreOptions) {
 			options.cache.key = store.name;
 		}
 		_cachedStoresMap.set(store.name, options.cache);
+
+		_stores[store.name] = store.state;
 		options.cache.adapter.getFromCache(getCacheKey(store.name)!).then((data) => {
 			if (data) {
 				_stores[store.name] = data;
 			} else {
-				_stores[store.name] = store.state;
 				options.cache?.adapter.setToCache(getCacheKey(store.name)!, store.state);
 			}
 		});
@@ -156,7 +157,7 @@ function store<InferedState = undefined>(table?: BasicStore<InferedState>, mainT
 		}
 	}
 	if (mainTable) {
-		if (!_stores[mainTable]) {
+		if (!_stores[mainTable] && !table) {
 			throw new Error(`Store ${mainTable} does not exist`);
 		}
 		_host = true;
