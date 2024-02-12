@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createStore, useStore } from '$lib/db.svelte.js';
+	import { createStore, useStore } from '../../dist/index.js';
 	import Test from './test.svelte';
 
 	type two = {
@@ -28,9 +28,6 @@
 
 	console.log(store.get('check.one.two'));
 
-	type Stores = {
-		tes2: two['state'];
-	};
 	createStore({
 		name: 'tes2',
 		state: {
@@ -42,7 +39,7 @@
 		}
 	} satisfies two);
 
-	const tes = useStore<Stores['tes2']>('tes2');
+	const tes = useStore<two>('tes2');
 	console.log(' fo.bar.ba - ', tes.get('fo.bar.ba'));
 
 	setInterval(() => {

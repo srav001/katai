@@ -1,11 +1,22 @@
 <script lang="ts">
-	import { useStore } from '$lib/db.svelte.js';
+	import { useStore } from '../../dist/index.js';
 
-	const tes = useStore<Stores['tes2']>('tes2');
+	type two = {
+		name: 'tes2';
+		state: {
+			fo: {
+				bar: {
+					ba: number;
+				};
+			};
+		};
+	};
 
-	tes.addSubscriber('fo.bar.ba', (val) => {
-		console.log('val - ', val);
+	const tes = useStore<two>('tes2');
+
+	tes.subscribe('fo.bar.*', (val) => {
+		console.log('subscribe - ', val);
 	});
 </script>
 
-<h1>{tes.$value.fo.bar.ba}</h1>
+<h3>{tes.$value.fo.bar.ba}</h3>

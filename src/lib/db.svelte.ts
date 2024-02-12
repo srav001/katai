@@ -6,7 +6,6 @@ import type {
 	GetDeepValue,
 	PathInto,
 	PathIntoDeep,
-	Prettier,
 	PrimitiveTypes
 } from '../types/utilities.ts';
 import { deepClone, get as getNestedValue, set as setNestedValue } from './utilites.js';
@@ -15,7 +14,6 @@ export type TypesOfState = Record<string, PrimitiveTypes | GenericArray | Generi
 export type BasicStore<T = TypesOfState> = {
 	name: string;
 	state: T;
-	useCache?: boolean;
 };
 
 function deepCloneDbValue<InferredType>(val: InferredType): InferredType {
@@ -56,13 +54,13 @@ function createState<T extends BasicStore>(store: T, options?: StoreOptions) {
 		if (!options?.cache?.key) {
 			options.cache.key = store.name;
 		}
-		_cachedStoresMap.set(options?.cache.key, options.cache);
-		options.cache.adapter.getFromCache(options!.cache.key).then((data) => {
+		_cachedStoresMap.set(store.name, options.cache);
+		options.cache.adapter.getFromCache(getCacheKey(store.name)!).then((data) => {
 			if (data) {
 				_stores[store.name] = data;
 			} else {
 				_stores[store.name] = store.state;
-				options.cache?.adapter.setToCache(options!.cache.key!, store.state);
+				options.cache?.adapter.setToCache(getCacheKey(store.name)!, store.state);
 			}
 		});
 		return store;
@@ -123,11 +121,9 @@ function handleCacheOfStore(key: string) {
 
 	if (_cachedStoresMap.has(storeName)) {
 		const cacheAdapter = _cachedStoresMap.get(storeName)!.adapter;
-		cacheAdapter.setToCache(storeName, _stores[storeName]);
+		cacheAdapter.setToCache(getCacheKey(storeName)!, _stores[storeName]);
 	}
 }
-
-type NewTable<T> = Prettier<BasicStore<T>>;
 
 type StoreOptions<T = unknown> = {
 	cache?: CacheOptons;
@@ -148,7 +144,7 @@ type GetDbValueIfNotEmpty<State, Key, T> = State extends undefined
 
 type TableKey<State, K = string> = State extends undefined ? K : keyof State;
 
-function store<InferedState = undefined>(table?: NewTable<InferedState>, mainTable?: string, options?: StoreOptions) {
+function store<InferedState = undefined>(table?: BasicStore<InferedState>, mainTable?: string, options?: StoreOptions) {
 	let _host = false;
 	let _key = '' as string;
 	let _oldData = undefined as InferedState | undefined;
@@ -337,7 +333,7 @@ export type StoreInstance<T = undefined> = ReturnType<typeof store<T>>;
  * These functions can be used to read data fromthe store,
  *  update the store's data, write new data to the store, and subscribe to changes in the store's data.
  */
-export function createStore<T>(table: NewTable<T>, options: StoreOptions) {
+export function createStore<T>(table: BasicStore<T>, options?: StoreOptions) {
 	return store(table, undefined, options);
 }
 
@@ -348,6 +344,6 @@ export function createStore<T>(table: NewTable<T>, options: StoreOptions) {
  * These functions can be used to read data fromthe store,
  *  update the store's data, write new data to the store, and subscribe to changes in the store's data.
  */
-export function useStore<T>(storeName: string): StoreInstance<T> {
-	return store<T>(undefined, storeName);
+export function useStore<T extends BasicStore<Record<string, unknown>>>(storeName: string) {
+	return store<T['state']>(undefined, storeName);
 }
