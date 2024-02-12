@@ -54,5 +54,33 @@
 		"typescript": "^5.3.3",
 		"vite": "^5.0.11",
 		"vitest": "^1.0.0"
-	}
+	},
+	"description": "Katai (meaning store in Tamil) is a simple state manager for Svelte 5",
+	"dependencies": {
+		"eslint-compat-utils": "^0.1.2",
+		"eslint-scope": "^7.2.2",
+		"eslint-visitor-keys": "^3.4.3",
+		"svelte-eslint-parser": "^0.33.1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/srav001/katai.git"
+	},
+	"keywords": [
+		"store",
+		"state",
+		"svelte",
+		"svelte5",
+		"svelte-5",
+		"svelte 5",
+		"svelteKit",
+		"svelte-kit",
+		"svelte kit"
+	],
+	"author": "Sravan Suresh",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/srav001/katai/issues"
+	},
+	"homepage": "https://github.com/srav001/katai#readme"
 }
