@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
+// @ts-nocheck
 export type Prettier<T> = {
 	[K in keyof T]: T[K];
 } & {};

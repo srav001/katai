@@ -26,7 +26,7 @@
 		}
 	});
 
-	console.log(store.get('check.one.two'));
+	console.log(store.get('check.one.two.three'));
 
 	createStore({
 		name: 'tes2',

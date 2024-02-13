@@ -7,7 +7,7 @@ import type {
 	PathInto,
 	PathIntoDeep,
 	PrimitiveTypes
-} from '../types/utilities.ts';
+} from './types/utilities.js';
 import { deepClone, get as getNestedValue, set as setNestedValue } from './utilites.js';
 
 export type TypesOfState = Record<string, PrimitiveTypes | GenericArray | GenericObject>;
