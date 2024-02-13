@@ -1,10 +1,16 @@
 ## ❗️ In Development ❗️
 
-The project is still in heavy development. Hoping to release it right before Svelte 5 release. You can find usable examples in src/routes/+page.svelte.
+The project is still in development. Hoping to release it right before Svelte 5 release. You can find usable examples in src/routes/+page.svelte.
 
 # katai
 
-Katai (meaning store in Tamil) is a simple state manager for Svelte 5. It builds on top of the familiar APIs of Svelte 3 & 4 stores while offering more functionality. [Was earlier called svelte-virtual-store]
+Kaṭai (meaning store in Tamil) is a simple and lightweight store for Svelte 5.
+
+It was based on top of the familiar APIs of Svelte 4 (and Svelte 3) stores while offering more functionality including adapters to easily cache the stores.
+
+All while still being really small(less than 8kb gzipped including cache adapters).
+
+[Was earlier called svelte-virtual-store]
 
 ## createStore
 
@@ -138,6 +144,7 @@ Returns a `storeObj` object with the following methods:
 -   `subscribe(key, subscriber)`: Adds a subscriber function to the specified key.
 -   `unsubscribe(key, subscriber)`: Removes a subscriber function from the specified key.
 -   `removeSubscribers(key)`: Removes all subscribers from the specified key.
+-   `clearCache(tableKey)`: Clears the cache of the store.
 -   `dropStore(tableKey)`: Deletes the specified table from the store.
 
 ## Examples

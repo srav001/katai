@@ -306,23 +306,15 @@ function store<InferedState = undefined>(table?: BasicStore<InferedState>, mainT
 		return storeObj;
 	}
 
-	function clearCache<K extends TableKey<InferedState, string>>(tableKey?: K) {
-		if (!_stores[tableKey as string]) {
-			return;
-		}
-		//@ts-expect-error not an error
-		tableKey = getKey(tableKey);
+	function clearCache() {
+		const tableKey = getKey();
 		if (_cachedStoresMap.has(tableKey)) {
 			_cachedStoresMap.get(tableKey)?.adapter.deleteFromCache(getCacheKey(tableKey)!);
 		}
 	}
 
-	function dropStore<K extends TableKey<InferedState, string>>(tableKey?: K) {
-		if (!_stores[tableKey as string]) {
-			return;
-		}
-		//@ts-expect-error not an error
-		tableKey = getKey(tableKey);
+	function dropStore() {
+		const tableKey = getKey();
 		for (const [key] of _subscribersMap) {
 			if (key.indexOf(tableKey) === 0) {
 				_subscribersMap.delete(key);

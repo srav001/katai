@@ -1,6 +1,6 @@
 {
 	"name": "katai",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "npm run package",
