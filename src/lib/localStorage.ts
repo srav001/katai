@@ -11,7 +11,7 @@ function deleteFromCache(key: string) {
 	localStorage.removeItem(key);
 }
 
-export const localStorageConfig = {
+export const localStorageAdapter = {
 	getFromCache,
 	setToCache,
 	deleteFromCache

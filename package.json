@@ -1,6 +1,6 @@
 {
 	"name": "katai",
-	"version": "0.0.4",
+	"version": "0.0.6",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "npm run package",
@@ -23,7 +23,9 @@
 			"import": "./dist/index.js"
 		}
 	},
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"peerDependencies": {
 		"svelte": ">=5.0.0",
 		"idb-keyval": "^6.2.1"

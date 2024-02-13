@@ -59,7 +59,11 @@ function createState<T extends BasicStore>(store: T, options?: StoreOptions) {
 		_cachedStoresMap.set(store.name, options.cache);
 
 		options.cache.adapter.getFromCache(getCacheKey(store.name)!).then((data) => {
-			if (data) {
+			if (
+				data &&
+				typeof data === 'object' &&
+				((!Array.isArray(data) && Object.keys(data).length > 0) || (Array.isArray(data) && data.length > 0))
+			) {
 				_stores[store.name] = data;
 			} else {
 				options.cache?.adapter.setToCache(getCacheKey(store.name)!, store.state);
