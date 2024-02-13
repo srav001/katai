@@ -7,7 +7,12 @@ function setToCache<T>(key: string, value: T) {
 	localStorage.setItem(key, JSON.stringify(value as unknown));
 }
 
+function deleteFromCache(key: string) {
+	localStorage.removeItem(key);
+}
+
 export const localStorageConfig = {
 	getFromCache,
-	setToCache
+	setToCache,
+	deleteFromCache
 };

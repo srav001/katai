@@ -30,6 +30,7 @@ type CacheOptons = {
 	adapter: {
 		getFromCache: <U>(key: string) => Promise<U | undefined>;
 		setToCache: (key: string, data: any) => void;
+		deleteFromCache: (key: string) => void;
 	};
 };
 // eslint-disable-next-line sonarjs/no-unused-collection
@@ -50,13 +51,13 @@ const _stores: Record<string, unknown> = $state({});
  * @returns A function that takes a table and returns a table.
  */
 function createState<T extends BasicStore>(store: T, options?: StoreOptions) {
+	_stores[store.name] = store.state;
 	if (options?.cache?.adapter) {
 		if (!options?.cache?.key) {
 			options.cache.key = store.name;
 		}
 		_cachedStoresMap.set(store.name, options.cache);
 
-		_stores[store.name] = store.state;
 		options.cache.adapter.getFromCache(getCacheKey(store.name)!).then((data) => {
 			if (data) {
 				_stores[store.name] = data;
@@ -64,11 +65,9 @@ function createState<T extends BasicStore>(store: T, options?: StoreOptions) {
 				options.cache?.adapter.setToCache(getCacheKey(store.name)!, store.state);
 			}
 		});
-		return store;
 	} else if (options?.cache?.key && !options?.cache?.adapter) {
 		throw new Error(`Cache adapter is not provided for ${store.name} Store`);
 	}
-	_stores[store.name] = store.state;
 
 	return store;
 }
@@ -179,6 +178,7 @@ function store<InferedState = undefined>(table?: BasicStore<InferedState>, mainT
 		subscribe,
 		unsubscribe,
 		removeSubscribers,
+		clearCache,
 		dropStore
 	};
 
@@ -305,6 +305,18 @@ function store<InferedState = undefined>(table?: BasicStore<InferedState>, mainT
 
 		return storeObj;
 	}
+
+	function clearCache<K extends TableKey<InferedState, string>>(tableKey?: K) {
+		if (!_stores[tableKey as string]) {
+			return;
+		}
+		//@ts-expect-error not an error
+		tableKey = getKey(tableKey);
+		if (_cachedStoresMap.has(tableKey)) {
+			_cachedStoresMap.get(tableKey)?.adapter.deleteFromCache(getCacheKey(tableKey)!);
+		}
+	}
+
 	function dropStore<K extends TableKey<InferedState, string>>(tableKey?: K) {
 		if (!_stores[tableKey as string]) {
 			return;
@@ -316,7 +328,7 @@ function store<InferedState = undefined>(table?: BasicStore<InferedState>, mainT
 				_subscribersMap.delete(key);
 			}
 		}
-		_subscribersMap.delete(`${tableKey as string}.*`);
+		_cachedStoresMap.get(tableKey)?.adapter.deleteFromCache(getCacheKey(tableKey)!);
 		_cachedStoresMap.delete(tableKey as string);
 
 		delete _stores[tableKey as string];
