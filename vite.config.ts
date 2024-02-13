@@ -3,9 +3,6 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
 	plugins: [sveltekit()],
-	build: {
-		minify: true
-	},
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}']
 	}

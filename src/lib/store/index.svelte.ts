@@ -7,8 +7,8 @@ import type {
 	PathInto,
 	PathIntoDeep,
 	PrimitiveTypes
-} from './types/utilities.js';
-import { deepClone, get as getNestedValue, set as setNestedValue } from './utilites.js';
+} from '../types/utilities.js';
+import { deepClone, get as getNestedValue, set as setNestedValue } from '../utils/index.js';
 
 export type TypesOfState = Record<string, PrimitiveTypes | GenericArray | GenericObject>;
 export type BasicStore<T = TypesOfState> = {
