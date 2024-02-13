@@ -144,8 +144,8 @@ Returns a `storeObj` object with the following methods:
 -   `subscribe(key, subscriber)`: Adds a subscriber function to the specified key.
 -   `unsubscribe(key, subscriber)`: Removes a subscriber function from the specified key.
 -   `removeSubscribers(key)`: Removes all subscribers from the specified key.
--   `clearCache(tableKey)`: Clears the cache of the store.
--   `dropStore(tableKey)`: Deletes the specified table from the store.
+-   `clearCache()`: Clears the cache of the store.
+-   `dropStore()`: Deletes the specified table from the store.
 
 ## Examples
 
@@ -194,5 +194,5 @@ userStore.unsubscribe('username', subscriberFunction);
 userStore.removeSubscribers('username');
 
 // Drop a table from the store
-userStore.dropStore('users');
+userStore.dropStore();
 ```
