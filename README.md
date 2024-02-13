@@ -8,7 +8,7 @@ Kaṭai (meaning store in Tamil) is a simple and lightweight store for Svelte 5.
 
 It was based on top of the familiar APIs of Svelte 4 (and Svelte 3) stores while offering more functionality including adapters to easily cache the stores.
 
-All while still being really small(less than 1.6kb gzipped including cache adapters).
+All while still being really small(less than 2kb gzipped including cache adapters).
 
 [Was earlier called svelte-virtual-store]
 
