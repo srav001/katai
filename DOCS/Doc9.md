@@ -4,16 +4,16 @@ The `createStore` function is used to read and write data to the store. It retur
 
 ### Parameters
 
-- `table`: T extends BasicStore - This is the table that we're creating a store for.
-- `options`: An optional parameter that allows configuring the store, including caching options.
+-   `store`: T extends BasicStore - This is the store that we're creating a store for.
+-   `options`: An optional parameter that allows configuring the store, including caching options.
 
 ### Example
 
 ```typescript
 import { createStore } from 'path/to/store';
 
-const table = {
-  name: 'myTable',
+const store = {
+  name: 'myStore',
   state: { /* initial state */ }
 };
 
@@ -24,7 +24,7 @@ const options = {
   }
 };
 
-const myStore = createStore(table, options);
+const myStore = createStore(store, options);
 ```
 
 ## useStore
@@ -33,35 +33,35 @@ The `useStore` function is used to read and write data to the state of a store. 
 
 ### Parameters
 
-- `storeName`: The name of the store to use.
+-   `storeName`: The name of the store to use.
 
 ### Example
 
 ```typescript
 import { useStore } from 'path/to/store';
 
-const myStore = useStore('myTable');
+const myStore = useStore('myStore');
 ```
 
 ### Functions Available in Both `createStore` and `useStore`
 
-- `get(key?: string): unknown`: Retrieves the value of the specified key in the store.
-- `update(key: string, callback: (oldValue: unknown) => unknown): void`: Updates the value of the specified key in the store using a callback function.
-- `set(key: string, value: unknown): void`: Sets the value of the specified key in the store.
-- `next(callback: (data: unknown) => void, key?: string): void`: Allows subscribing to changes in the store's data.
-- `has(key: string): boolean`: Checks if a key exists in the store.
+-   `get(key?: string): unknown`: Retrieves the value of the specified key in the store.
+-   `update(key: string, callback: (oldValue: unknown) => unknown): void`: Updates the value of the specified key in the store using a callback function.
+-   `set(key: string, value: unknown): void`: Sets the value of the specified key in the store.
+-   `next(callback: (data: unknown) => void, key?: string): void`: Allows subscribing to changes in the store's data.
+-   `has(key: string): boolean`: Checks if a key exists in the store.
 
 ### Additional Functions Available in `createStore`
 
-- `write(key: string, value: unknown): void`: Writes a new value to the specified key in the store.
-- `writeUpdate(key: string, callback: (oldValue: unknown) => unknown): void`: Writes a new value to the specified key in the store using a callback function.
-- `subscribe(key: string, subscriber: (data: unknown, oldData?: unknown) => void): void`: Subscribes to changes in the store's data for the specified key.
-- `unsubscribe(key: string, subscriber: (data: unknown, oldData?: unknown) => void): void`: Unsubscribes from changes in the store's data for the specified key.
-- `removeSubscribers(key: string): void`: Removes all subscribers for the specified key.
-- `clearCache(): void`: Clears the cache associated with the store.
-- `dropStore(): void`: Drops the store, removing all associated data and cache.
+-   `write(key: string, value: unknown): void`: Writes a new value to the specified key in the store.
+-   `writeUpdate(key: string, callback: (oldValue: unknown) => unknown): void`: Writes a new value to the specified key in the store using a callback function.
+-   `subscribe(key: string, subscriber: (data: unknown, oldData?: unknown) => void): void`: Subscribes to changes in the store's data for the specified key.
+-   `unsubscribe(key: string, subscriber: (data: unknown, oldData?: unknown) => void): void`: Unsubscribes from changes in the store's data for the specified key.
+-   `removeSubscribers(key: string): void`: Removes all subscribers for the specified key.
+-   `clearCache(): void`: Clears the cache associated with the store.
+-   `dropStore(): void`: Drops the store, removing all associated data and cache.
 
 ### Note
 
-- Ensure to handle errors appropriately, especially when dealing with asynchronous operations or cache operations.
-- The cache functionality requires a cache adapter to be provided in the options object.
+-   Ensure to handle errors appropriately, especially when dealing with asynchronous operations or cache operations.
+-   The cache functionality requires a cache adapter to be provided in the options object.
