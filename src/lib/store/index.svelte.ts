@@ -45,10 +45,10 @@ function getCacheKey(storeName: string) {
 const _stores: Record<string, unknown> = $state({});
 
 /**
- * It creates a store for the table and caches the table's state if the table is marked as
+ * It creates a store for the store and caches the store's state if the store is marked as
  * cacheable
- * @param {T} store - T extends BasicStore - This is the table that we're creating a store for.
- * @returns A function that takes a table and returns a table.
+ * @param {T} store - T extends BasicStore - This is the store that we're creating a store for.
+ * @returns A function that takes a store and returns a store.
  */
 function createState<T extends BasicStore>(store: T, options?: StoreOptions) {
 	_stores[store.name] = store.state;
@@ -117,7 +117,7 @@ function runSubscribers(key: string, data: unknown, oldData: unknown) {
 }
 
 /**
- * If the table is cached, then set the state to the cache
+ * If the store is cached, then set the state to the cache
  * @param {string} key - The key of the store that was updated.
  */
 function handleCacheOfStore(key: string) {
@@ -133,7 +133,7 @@ type StoreOptions<T = unknown> = {
 	cache?: CacheOptons;
 };
 
-type DbKeyForDbWithTableInstance<T, U = string> = T extends undefined ? U : (PathInto<T> | keyof T) & U;
+type DbKeyForDbWithStoreInstance<T, U = string> = T extends undefined ? U : (PathInto<T> | keyof T) & U;
 
 type DbKeyForSubs<T, U = string> = T extends undefined
 	? U
@@ -146,25 +146,29 @@ type GetDbValueIfNotEmpty<State, Key, T> = State extends undefined
 		? GetDeepValue<State, MainKey>
 		: GetDeepValue<State, Key>;
 
-type TableKey<State, K = string> = State extends undefined ? K : keyof State;
+type StoreKey<State, K = string> = State extends undefined ? K : keyof State;
 
-function store<InferedState = undefined>(table?: BasicStore<InferedState>, mainTable?: string, options?: StoreOptions) {
+function storeInstance<InferedState = undefined>(
+	store?: BasicStore<InferedState>,
+	mainStore?: string,
+	options?: StoreOptions
+) {
 	let _host = false;
 	let _key = '' as string;
 	let _oldData = undefined as InferedState | undefined;
 
-	if (table) {
-		createState(table as BasicStore, options);
-		if (table.name) {
-			mainTable = table.name;
+	if (store) {
+		createState(store as BasicStore, options);
+		if (store.name) {
+			mainStore = store.name;
 		}
 	}
-	if (mainTable) {
-		if (!_stores[mainTable] && !table) {
-			throw new Error(`Store ${mainTable} does not exist`);
+	if (mainStore) {
+		if (!_stores[mainStore] && !store) {
+			throw new Error(`Store ${mainStore} does not exist`);
 		}
 		_host = true;
-		_key = mainTable;
+		_key = mainStore;
 	}
 
 	const storeObj = {
@@ -204,12 +208,12 @@ function store<InferedState = undefined>(table?: BasicStore<InferedState>, mainT
 		return key;
 	}
 
-	function get<T extends DbKeyForDbWithTableInstance<InferedState>, U = unknown>(key?: T) {
+	function get<T extends DbKeyForDbWithStoreInstance<InferedState>, U = unknown>(key?: T) {
 		return getNestedValue(_stores, getKey(key)) as GetDbValueIfNotEmpty<InferedState, T, U>;
 	}
 
 	function update<
-		U extends DbKeyForDbWithTableInstance<InferedState>,
+		U extends DbKeyForDbWithStoreInstance<InferedState>,
 		K = unknown,
 		// @ts-expect-error better to keep optional second in this case
 		T extends GetDbValueIfNotEmpty<InferedState, U, K>
@@ -226,14 +230,14 @@ function store<InferedState = undefined>(table?: BasicStore<InferedState>, mainT
 		return storeObj;
 	}
 
-	function has<U extends DbKeyForDbWithTableInstance<InferedState>>(key: U) {
+	function has<U extends DbKeyForDbWithStoreInstance<InferedState>>(key: U) {
 		key = getKey(key) as U;
 
 		return getNestedValue(_stores, key) !== undefined;
 	}
 
 	// @ts-expect-error better to keep optional second in this case
-	function next<T = unknown, U extends DbKeyForDbWithTableInstance<InferedState>>(
+	function next<T = unknown, U extends DbKeyForDbWithStoreInstance<InferedState>>(
 		callback: (data: T) => void,
 		key?: U
 	) {
@@ -296,7 +300,7 @@ function store<InferedState = undefined>(table?: BasicStore<InferedState>, mainT
 	}
 
 	function set<
-		U extends DbKeyForDbWithTableInstance<InferedState>,
+		U extends DbKeyForDbWithStoreInstance<InferedState>,
 		K = unknown,
 		// @ts-expect-error optional can be second
 		T extends GetDbValueIfNotEmpty<InferedState, U, K>
@@ -311,29 +315,29 @@ function store<InferedState = undefined>(table?: BasicStore<InferedState>, mainT
 	}
 
 	function clearCache() {
-		const tableKey = getKey();
-		if (_cachedStoresMap.has(tableKey)) {
-			_cachedStoresMap.get(tableKey)?.adapter.deleteFromCache(getCacheKey(tableKey)!);
+		const storeKey = getKey();
+		if (_cachedStoresMap.has(storeKey)) {
+			_cachedStoresMap.get(storeKey)?.adapter.deleteFromCache(getCacheKey(storeKey)!);
 		}
 	}
 
 	function dropStore() {
-		const tableKey = getKey();
+		const storeKey = getKey();
 		for (const [key] of _subscribersMap) {
-			if (key.indexOf(tableKey) === 0) {
+			if (key.indexOf(storeKey) === 0) {
 				_subscribersMap.delete(key);
 			}
 		}
-		_cachedStoresMap.get(tableKey)?.adapter.deleteFromCache(getCacheKey(tableKey)!);
-		_cachedStoresMap.delete(tableKey as string);
+		_cachedStoresMap.get(storeKey)?.adapter.deleteFromCache(getCacheKey(storeKey)!);
+		_cachedStoresMap.delete(storeKey as string);
 
-		delete _stores[tableKey as string];
+		delete _stores[storeKey as string];
 	}
 
 	return storeObj;
 }
 
-export type StoreInstance<T = undefined> = ReturnType<typeof store<T>>;
+export type StoreInstance<T = undefined> = ReturnType<typeof storeInstance<T>>;
 
 /**
  * The createStore function is used to read and write data to the store.
@@ -342,8 +346,8 @@ export type StoreInstance<T = undefined> = ReturnType<typeof store<T>>;
  * These functions can be used to read data fromthe store,
  *  update the store's data, write new data to the store, and subscribe to changes in the store's data.
  */
-export function createStore<T>(table: BasicStore<T>, options?: StoreOptions) {
-	return store(table, undefined, options);
+export function createStore<T>(store: BasicStore<T>, options?: StoreOptions) {
+	return storeInstance(store, undefined, options);
 }
 
 /**
@@ -354,5 +358,5 @@ export function createStore<T>(table: BasicStore<T>, options?: StoreOptions) {
  *  update the store's data, write new data to the store, and subscribe to changes in the store's data.
  */
 export function useStore<T extends BasicStore<Record<string, unknown>>>(storeName: string) {
-	return store<T['state']>(undefined, storeName);
+	return storeInstance<T['state']>(undefined, storeName);
 }
