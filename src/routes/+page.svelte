@@ -1,6 +1,26 @@
 <script lang="ts">
-	import { createStore, useStore } from '../../dist/index.js';
+	import { createStore, useStore, idbAdapter } from '../../dist/index.js';
 	import Test from './test.svelte';
+
+	const store = createStore(
+		{
+			name: 'res',
+			state: {
+				check: {
+					one: {
+						two: {
+							three: 'hello'
+						}
+					}
+				}
+			}
+		},
+		{
+			cache: {
+				adapter: idbAdapter
+			}
+		}
+	);
 
 	type two = {
 		name: 'tes2';
@@ -12,19 +32,6 @@
 			};
 		};
 	};
-
-	const store = createStore({
-		name: 'res',
-		state: {
-			check: {
-				one: {
-					two: {
-						three: 'hello'
-					}
-				}
-			}
-		}
-	});
 
 	console.log(store.get('check.one.two.three'));
 

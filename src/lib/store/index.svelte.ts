@@ -340,11 +340,9 @@ function storeInstance<InferedState = undefined>(
 export type StoreInstance<T = undefined> = ReturnType<typeof storeInstance<T>>;
 
 /**
- * The createStore function is used to read and write data to the store.
+ * The createStore function is used to create a store.
  * It returns an object with several functions to interact with the store's state,
  * including get, update, write, writeUpdate, next, and has.
- * These functions can be used to read data fromthe store,
- *  update the store's data, write new data to the store, and subscribe to changes in the store's data.
  */
 export function createStore<T>(store: BasicStore<T>, options?: StoreOptions) {
 	return storeInstance(store, undefined, options);
@@ -354,8 +352,6 @@ export function createStore<T>(store: BasicStore<T>, options?: StoreOptions) {
  * The useStore function is used to read and write data to the state of a store.
  * It returns an object with several functions to interact with the store's state,
  * including get, update, write, writeUpdate, next, and has.
- * These functions can be used to read data fromthe store,
- *  update the store's data, write new data to the store, and subscribe to changes in the store's data.
  */
 export function useStore<T extends BasicStore<Record<string, unknown>>>(storeName: string) {
 	return storeInstance<T['state']>(undefined, storeName);
