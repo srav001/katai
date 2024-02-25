@@ -14,12 +14,12 @@ All while still being really small(less than 2kb gzipped including cache adapter
 
 ## createStore
 
-The `createStore` function is used to create a new store. It takes two parameters: `table` and `mainTableKey`.
+The `createStore` function is used to create a new store. It takes two parameters: `store` and `mainStoreKey`.
 
 ### Parameters
 
-- `table` (NewTable<T>): The table object to create the store from.
-- `config`: The config for the table. We can provide the cache options including the adapter.
+- `store` (NewStore<T>): The store object to create the store from.
+- `config`: The config for the store. We can provide the cache options including the adapter.
 
 ### Return Value
 
@@ -31,32 +31,32 @@ Returns a `Store` object with several methods to interact with the store's state
 import { createStore, idbAdapter } from 'katai';
 
 type one = {
-	name: 'test';
-	state: {
-		foo: {
-			bar: {
-				baz: string;
-			};
-		};
-	};
+  name: 'test';
+  state: {
+    foo: {
+      bar: {
+        baz: string;
+      };
+    };
+  };
 };
 
 createStore(
-	{
-		name: 'test',
-		state: {
-			foo: {
-				bar: {
-					baz: 'heo'
-				}
-			}
-		}
-	} satisfies one,
-	{
-		cache: {
-			adapter: idbAdapter
-		}
-	}
+  {
+    name: 'test',
+    state: {
+      foo: {
+        bar: {
+          baz: 'heo'
+        }
+      }
+    }
+  } satisfies one,
+  {
+    cache: {
+      adapter: idbAdapter
+    }
+  }
 );
 ```
 
@@ -64,7 +64,7 @@ createStore(
 const test = store.get('check.one.two');
 
 store.subscribe('check.one.two', (test) => {
-	console.log('test - ', test);
+  console.log('test - ', test);
 });
 ```
 
@@ -80,7 +80,7 @@ You can subscribe to store changes for `a particular key` or for `deep changes`.
 
 ```typescript
 store.subscribe('check.one.two', (test) => {
-	console.log('test - ', test);
+  console.log('test - ', test);
 });
 // This will only run when two property of one object of check object changes
 ```
@@ -89,7 +89,7 @@ If the value of a key is an POJO then will be able to subscribe deeply with `*` 
 
 ```typescript
 store.subscribe('check.one.*', (val) => {
-	console.log('check.one.* - ', val);
+  console.log('check.one.* - ', val);
 });
 // This will run when any change is made to one object and it's children.
 ```
@@ -99,7 +99,7 @@ This is not possible as the value of `three` is `string`
 ```typescript
 // You will get the below error
 store.subscribe('check.one.two.three.*', (val) => {
-	console.log('check.one.* - ', val);
+  console.log('check.one.* - ', val);
 });
 // Argument of type '"check.one.two.three.*"' is not assignable to parameter of type '"" | "check" | "check.*" | "check.one" | "check.one.*" | "check.one.two" | "check.one.two.*" | "check.one.two.three"'
 ```
@@ -139,17 +139,17 @@ Returns a `storeObj` object with the following methods:
 - `unsubscribe(key, subscriber)`: Removes a subscriber function from the specified key.
 - `removeSubscribers(key)`: Removes all subscribers from the specified key.
 - `clearCache()`: Clears the cache of the store.
-- `dropStore()`: Deletes the specified table from the store.
+- `dropStore()`: Deletes the specified store from the store.
 
 ## Examples
 
 ```javascript
 // Create a new store
-const myStore = createStore({ name: 'myTable', state: { myKey: 'value' } });
+const myStore = createStore({ name: 'myStore', state: { myKey: 'value' } });
 
 // Add a subscriber to a key
 myStore.subscribe('myKey', (value, oldValue) => {
-	console.log(`Value of myKey changed from ${oldValue} to ${value}`);
+  console.log(`Value of myKey changed from ${oldValue} to ${value}`);
 });
 
 // Set the value of a key
@@ -162,7 +162,7 @@ const userStore = createStore({ name: 'users', state: { username: 'value' } });
 
 // Add a subscriber to a key
 userStore.subscribe('username', (value, oldValue) => {
-	console.log(`Username changed from ${oldValue} to ${value}`);
+  console.log(`Username changed from ${oldValue} to ${value}`);
 });
 
 // Set the value of a key
@@ -187,6 +187,6 @@ userStore.unsubscribe('username', subscriberFunction);
 // Unsubscribe all subscribers from a key
 userStore.removeSubscribers('username');
 
-// Drop a table from the store
+// Drop a store
 userStore.dropStore();
 ```
