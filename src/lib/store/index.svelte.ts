@@ -305,23 +305,21 @@ function storeInstance<InferedState = undefined>(
 	}
 
 	function clearCache() {
-		const storeKey = getKey();
-		if (_cachedStoresMap.has(storeKey)) {
-			_cachedStoresMap.get(storeKey)?.adapter.deleteFromCache(getCacheKey(storeKey)!);
+		if (_cachedStoresMap.has(storeName)) {
+			_cachedStoresMap.get(storeName)?.adapter.deleteFromCache(getCacheKey(storeName)!);
 		}
 	}
 
 	function dropStore() {
-		const storeKey = getKey();
 		for (const [key] of _subscribersMap) {
-			if (key.indexOf(storeKey) === 0) {
+			if (key.indexOf(storeName) === 0) {
 				_subscribersMap.delete(key);
 			}
 		}
-		_cachedStoresMap.get(storeKey)?.adapter.deleteFromCache(getCacheKey(storeKey)!);
-		_cachedStoresMap.delete(storeKey);
+		_cachedStoresMap.get(storeName)?.adapter.deleteFromCache(getCacheKey(storeName)!);
+		_cachedStoresMap.delete(storeName);
 
-		delete _stores[storeName][storeKey];
+		delete _stores[storeName];
 	}
 
 	return storeObj;
