@@ -44,3 +44,9 @@ export type GetDeepValue<T, Key extends PathInto<T> | unknown> = Key extends `${
 
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
 export type IsUnion<T> = [T] extends [UnionToIntersection<T>] ? false : true;
+
+export type DeepReadonly<T> = T extends Function
+	? T
+	: T extends object
+		? { readonly [K in keyof T]: DeepReadonly<T[K]> }
+		: T;

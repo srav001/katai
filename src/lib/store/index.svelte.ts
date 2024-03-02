@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { onDestroy } from 'svelte';
 import type {
+	DeepReadonly,
 	GenericArray,
 	GenericObject,
 	GetDeepValue,
@@ -28,8 +29,8 @@ const CACHE_KEY = 'katai-';
 type CacheOptons = {
 	key?: string;
 	adapter: {
-		getFromCache: <U>(key: string) => Promise<U | undefined>;
-		setToCache: (key: string, data: any) => void;
+		getFromCache: <U>(key: string, decoder?: (val: string) => any) => Promise<U | undefined>;
+		setToCache: (key: string, data: any, encoder?: (val: any) => string) => void;
 		deleteFromCache: (key: string) => void;
 	};
 };
@@ -42,7 +43,7 @@ function getCacheKey(storeName: string) {
 	return undefined;
 }
 
-const _stores: Record<string, unknown> = $state({});
+const _stores: Record<string, any> = $state({});
 
 /**
  * It creates a store for the store and caches the store's state if the store is marked as
@@ -129,55 +130,44 @@ function handleCacheOfStore(key: string) {
 	}
 }
 
-type StoreOptions<T = unknown> = {
+type StoreOptions = {
 	cache?: CacheOptons;
 };
 
-type DbKeyForDbWithStoreInstance<T, U = string> = T extends undefined ? U : (PathInto<T> | keyof T) & U;
+type StoreKeyForStoreInstance<T, U = string> = T extends undefined ? U : (PathInto<T> | keyof T) & U;
 
-type DbKeyForSubs<T, U = string> = T extends undefined
+type StoreKeyForSubs<T, U = string> = T extends undefined
 	? U
 	: // @ts-expect-error - ts does not need to worry here
 		(PathIntoDeep<T> | keyof T | `${keyof T}.*`) & U;
 
-type GetDbValueIfNotEmpty<State, Key, T> = State extends undefined
+type GetStoreValueIfNotEmpty<State, Key, T> = State extends undefined
 	? T
-	: Key extends `${infer MainKey}.*`
-		? GetDeepValue<State, MainKey>
-		: GetDeepValue<State, Key>;
-
-type StoreKey<State, K = string> = State extends undefined ? K : keyof State;
+	: Key extends ''
+		? State
+		: Key extends `${infer MainKey}.*`
+			? GetDeepValue<State, MainKey>
+			: GetDeepValue<State, Key>;
 
 function storeInstance<InferedState = undefined>(
-	store?: BasicStore<InferedState>,
-	mainStore?: string,
+	store: BasicStore<InferedState> | undefined,
+	storeName: string,
 	options?: StoreOptions
 ) {
-	let _host = false;
-	let _key = '' as string;
 	let _oldData = undefined as InferedState | undefined;
 
 	if (store) {
 		createState(store as BasicStore, options);
-		if (store.name) {
-			mainStore = store.name;
-		}
 	}
-	if (mainStore) {
-		if (!_stores[mainStore] && !store) {
-			throw new Error(`Store ${mainStore} does not exist`);
-		}
-		_host = true;
-		_key = mainStore;
+	if (storeName && !_stores[storeName]) {
+		throw new Error(`Store ${storeName} does not exist`);
+	} else if (!storeName) {
+		throw new Error('Store name is required');
 	}
 
 	const storeObj = {
 		get $value() {
-			if (_key) {
-				return _stores[_key] as InferedState;
-			}
-
-			return _stores as InferedState;
+			return _stores[storeName];
 		},
 		get,
 		set,
@@ -190,69 +180,69 @@ function storeInstance<InferedState = undefined>(
 		dropStore
 	};
 
-	function flush() {
-		if (!_host) {
-			_key = '';
-		}
-		_oldData = undefined;
-	}
-
 	function getKey(key?: string) {
 		if (!key) {
-			return _key;
-		}
-		if (_host && key.indexOf(_key) !== 0) {
-			return `${_key}.${key}`;
+			return storeName;
 		}
 
 		return key;
 	}
 
-	function get<T extends DbKeyForDbWithStoreInstance<InferedState>, U = unknown>(key?: T) {
-		return getNestedValue(_stores, getKey(key)) as GetDbValueIfNotEmpty<InferedState, T, U>;
+	function get<T extends StoreKeyForStoreInstance<InferedState> | undefined = undefined, U = unknown>(
+		key?: T
+	): T extends undefined ? DeepReadonly<InferedState> : DeepReadonly<GetStoreValueIfNotEmpty<InferedState, T, U>> {
+		if (key === '' || key === undefined) {
+			return _stores[storeName];
+		}
+
+		return getNestedValue(_stores[storeName], getKey(key)) as any;
 	}
 
 	function update<
-		U extends DbKeyForDbWithStoreInstance<InferedState>,
+		U extends StoreKeyForStoreInstance<InferedState> | '',
 		K = unknown,
 		// @ts-expect-error better to keep optional second in this case
-		T extends GetDbValueIfNotEmpty<InferedState, U, K>
-	>(key: U, callback: (data: T) => T) {
+		T extends GetStoreValueIfNotEmpty<InferedState, U, K>
+	>(key: U, mutator: (state: T) => T) {
 		key = getKey(key) as U;
-		_oldData = getNestedValue(_stores, key);
-		const data = callback(_oldData as T);
+		_oldData = getNestedValue(_stores[storeName], key);
+		console.log(JSON.stringify(_oldData), 'oldData');
+		const data = mutator(_oldData as T);
 
-		setNestedValue(_stores, key, data);
+		setNestedValue(_stores[storeName], key, data);
 		handleCacheOfStore(key);
 		runSubscribers(key, data, _oldData);
-		flush();
 
 		return storeObj;
 	}
 
-	function has<U extends DbKeyForDbWithStoreInstance<InferedState>>(key: U) {
+	function has<U extends StoreKeyForStoreInstance<InferedState>>(key: U) {
 		key = getKey(key) as U;
 
-		return getNestedValue(_stores, key) !== undefined;
+		return getNestedValue(_stores[storeName], key) !== undefined;
 	}
 
 	// @ts-expect-error better to keep optional second in this case
-	function next<T = unknown, U extends DbKeyForDbWithStoreInstance<InferedState>>(
-		callback: (data: T) => void,
+	function next<T = unknown, U extends StoreKeyForStoreInstance<InferedState>>(
+		callback: (state: T) => void,
 		key?: U
 	) {
-		let data = _stores;
+		let data = _stores[storeName];
 		if (key) {
-			data = getNestedValue(_stores, key);
+			data = getNestedValue(_stores[storeName], key);
 		}
 		callback(deepCloneDbValue(data) as T);
 
 		return storeObj;
 	}
 
-	function subscribe<U extends DbKeyForSubs<InferedState>, T = undefined>(
+	function subscribe<U extends StoreKeyForSubs<InferedState>, T = undefined>(
 		key: U | '',
-		subscriber: Subscriber<GetDbValueIfNotEmpty<InferedState, U, T>, GetDbValueIfNotEmpty<InferedState, U, T>>
+		subscriber: Subscriber<
+			GetStoreValueIfNotEmpty<InferedState, U, T>,
+			GetStoreValueIfNotEmpty<InferedState, U, T>
+		>,
+		immediate = false
 	): typeof storeObj {
 		key = getKey(key) as U;
 		if (!_subscribersMap.has(key as string)) {
@@ -266,12 +256,12 @@ function storeInstance<InferedState = undefined>(
 			.get(key as string)!
 			.add(subscriber as Subscriber<typeof subscriber>);
 
-		// @ts-expect-error - we know that the _key exists
-		subscriber(getValue(key), undefined);
+		if (immediate) {
+			subscriber(get(key as StoreKeyForStoreInstance<InferedState>) as any, undefined as any);
+		}
 
 		try {
-			// @ts-expect-error - TODO: find how to type this
-			onDestroy(removeSubscriber.bind(this, key, subscriber as any));
+			onDestroy(unsubscribe.bind(null, key, subscriber as any));
 		} catch (err) {
 			console.log(err);
 		}
@@ -279,9 +269,9 @@ function storeInstance<InferedState = undefined>(
 		return storeObj;
 	}
 
-	function unsubscribe<U extends DbKeyForSubs<InferedState>, T = undefined>(
+	function unsubscribe<U extends StoreKeyForSubs<InferedState>, T = undefined>(
 		key: U | '',
-		subscriber: Subscriber<GetDbValueIfNotEmpty<InferedState, U, T>, GetDbValueIfNotEmpty<InferedState, U, T>>
+		subscriber: Subscriber<GetStoreValueIfNotEmpty<InferedState, U, T>, GetStoreValueIfNotEmpty<InferedState, U, T>>
 	): typeof storeObj {
 		key = getKey(key) as U;
 		if (_subscribersMap.has(key as string)) {
@@ -292,7 +282,7 @@ function storeInstance<InferedState = undefined>(
 		return storeObj;
 	}
 
-	function removeSubscribers<T extends DbKeyForSubs<InferedState>>(key?: T): typeof storeObj {
+	function removeSubscribers<T extends StoreKeyForSubs<InferedState>>(key?: T): typeof storeObj {
 		key = getKey(key) as T;
 		_subscribersMap.delete(key);
 
@@ -300,13 +290,13 @@ function storeInstance<InferedState = undefined>(
 	}
 
 	function set<
-		U extends DbKeyForDbWithStoreInstance<InferedState>,
+		U extends StoreKeyForStoreInstance<InferedState>,
 		K = unknown,
 		// @ts-expect-error optional can be second
-		T extends GetDbValueIfNotEmpty<InferedState, U, K>
+		T extends GetStoreValueIfNotEmpty<InferedState, U, K>
 	>(key: U, value: T): typeof storeObj {
 		if (has(key)) {
-			update(key, () => value as GetDbValueIfNotEmpty<InferedState, U, TypesOfState>);
+			update(key, () => value as GetStoreValueIfNotEmpty<InferedState, U, TypesOfState>);
 		} else {
 			throw new Error(`Key ${key} does not exist`);
 		}
@@ -329,9 +319,9 @@ function storeInstance<InferedState = undefined>(
 			}
 		}
 		_cachedStoresMap.get(storeKey)?.adapter.deleteFromCache(getCacheKey(storeKey)!);
-		_cachedStoresMap.delete(storeKey as string);
+		_cachedStoresMap.delete(storeKey);
 
-		delete _stores[storeKey as string];
+		delete _stores[storeName][storeKey];
 	}
 
 	return storeObj;
@@ -345,7 +335,7 @@ export type StoreInstance<T = undefined> = ReturnType<typeof storeInstance<T>>;
  * including get, update, write, writeUpdate, next, and has.
  */
 export function createStore<T>(store: BasicStore<T>, options?: StoreOptions) {
-	return storeInstance(store, undefined, options);
+	return storeInstance(store, store.name, options);
 }
 
 /**

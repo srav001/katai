@@ -1,32 +1,9 @@
-// A set of utility functions to use to remove repetitive and widley used code
-export type UtilityFunction = (...args: any) => any;
-export type NonUndefined<T> = T extends undefined ? never : T;
-
-/**
- * Try to run the function passed in, and if it fails, log the error.
- * @param {UtilityFunction} func - UtilityFunction
- * @returns The function execution is being returned.
- */
-export function wrapInTryCatch<FunctionType>(func: UtilityFunction): FunctionType {
-	try {
-		return func() as FunctionType;
-	} catch (error) {
-		console.error(error);
-		let emptyResponse: FunctionType;
-
-		// @ts-ignore
-		return emptyResponse;
-	}
-}
-
 /**
  * It clones a value using JSON - stringify & parse. es6 types not supported
  * @param value - The value to be cloned.
  */
 export function deepClone<InferedType>(value: InferedType): InferedType {
-	return wrapInTryCatch(function () {
-		return JSON.parse(JSON.stringify(value));
-	});
+	return JSON.parse(JSON.stringify(value)) as InferedType;
 }
 
 export type BasicObject = Record<string, any>;
@@ -37,35 +14,44 @@ function getOrSetNestedValueInObject(
 	value: unknown = undefined,
 	action: 'get' | 'set' = 'get'
 ): void | unknown {
-	return wrapInTryCatch(function () {
-		let schema: BasicObject = objectToUpdate;
-		const pathList = path.split('.');
-		const pathArrayLength = pathList.length;
-		let exit = false;
-		for (let i = 0; i < pathArrayLength - 1; i++) {
-			const elem: string = pathList[i];
-			if (!schema[elem]) {
-				if (action === 'get') {
-					exit = true;
-					break;
-				}
-				schema[elem] = {};
+	if (objectToUpdate === undefined) {
+		return undefined;
+	}
+	const pathList = path.split('.');
+	const pathArrayLength = pathList.length;
+
+	if (pathArrayLength === 1) {
+		if (action === 'set') {
+			objectToUpdate[path] = value;
+		}
+		return objectToUpdate[path];
+	}
+
+	let schema: BasicObject = objectToUpdate;
+	let exit = false;
+	for (let i = 0; i < pathArrayLength - 1; i++) {
+		const elem: string = pathList[i];
+		if (!schema[elem]) {
+			if (action === 'get') {
+				exit = true;
+				break;
 			}
-			schema = schema[elem];
+			schema[elem] = {};
 		}
+		schema = schema[elem];
+	}
 
-		if (exit === true) {
-			return undefined;
-		}
+	if (exit === true) {
+		return undefined;
+	}
 
-		if (value) {
-			schema[pathList[pathArrayLength - 1]] = value;
+	if (action === 'set') {
+		schema[pathList[pathArrayLength - 1]] = value;
 
-			return objectToUpdate;
-		}
+		return objectToUpdate;
+	}
 
-		return schema[pathList[pathArrayLength - 1]];
-	});
+	return schema[pathList[pathArrayLength - 1]];
 }
 
 /**
