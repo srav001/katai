@@ -1,6 +1,6 @@
 import { createStore, localStorageAdapter } from '$lib/index.js';
 
-type Todo = {
+export type Todo = {
 	id: number;
 	title: string;
 	status: 'completed' | 'active';

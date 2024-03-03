@@ -1,4 +1,5 @@
 <script lang="ts">
+	import TodoCard from './components/TodoCard.svelte';
 	import { todosStore } from './stores.js';
 
 	let toComplete = $derived(todosStore.get().todos.filter((todo) => todo.status === 'active'));
@@ -6,6 +7,7 @@
 
 	let newTodoTitle = $state('');
 	function addTodo() {
+		if (!newTodoTitle) return;
 		todosStore.update('todos', (todos) => {
 			todos.push({ id: todos.length, title: newTodoTitle, status: 'active' });
 			return todos;
@@ -19,12 +21,15 @@
 		<h1>TODOS</h1>
 		<h6>Active: {toComplete.length} | completed: {completed.length}</h6>
 
-		<form on:submit={addTodo}>
+		<form onsubmit={addTodo}>
 			<input name="title" type="text" placeholder="Enter a new todo" bind:value={newTodoTitle} />
 			<button type="submit">Add Todo</button>
 		</form>
 		{#each toComplete as todo}
-			<article>{todo.title}</article>
+			<TodoCard {todo} />
+		{/each}
+		{#each completed as todo}
+			<TodoCard {todo} />
 		{/each}
 	</article>
 </main>
