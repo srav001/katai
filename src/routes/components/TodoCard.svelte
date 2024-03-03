@@ -12,7 +12,7 @@
 		});
 	}
 
-	const { todo } = $props<{
+	let { todo } = $props<{
 		todo: Todo;
 	}>();
 </script>
