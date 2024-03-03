@@ -1,10 +1,10 @@
-async function getFromCache<T>(key: string) {
+async function getFromCache<T>(key: string, decoder: (val: string) => any = JSON.parse) {
 	const val = localStorage.getItem(key);
-	return val ? (JSON.parse(val) as T) : undefined;
+	return val ? (decoder(val) as T) : undefined;
 }
 
-function setToCache<T>(key: string, value: T) {
-	localStorage.setItem(key, JSON.stringify(value as unknown));
+function setToCache<T>(key: string, value: T, encoder: (val: any) => string = JSON.stringify) {
+	localStorage.setItem(key, encoder(value as unknown));
 }
 
 function deleteFromCache(key: string) {
