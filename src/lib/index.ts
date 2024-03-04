@@ -1,4 +1,4 @@
-export { createStore, type StoreInstance } from './store/index.svelte.js';
+export { createStore } from './store/index.svelte.js';
 
-export { idbAdapter } from './cache/idb.js';
-export { localStorageAdapter } from './cache/localStorage.js';
+export { idbAdapter } from './caches/idb.js';
+export { localStorageAdapter } from './caches/localStorage.js';

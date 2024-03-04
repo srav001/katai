@@ -15,7 +15,24 @@
 		clearInterval(interval);
 	});
 
-	const tes = testStore.get((state) => state.counter);
+	const tes = testStore.get((state) => {
+		if (state.counter % 2 === 0) {
+			return 'even';
+		}
+		return 'odd';
+	});
+
+	const res = testStore.get((state) => state.counter);
+
+	$effect.pre(() => {
+		console.log('res', res());
+	});
+
+	$effect.pre(() => {
+		if (tes()) {
+			console.log(tes());
+		}
+	});
 </script>
 
 <h2>{tes()}</h2>
