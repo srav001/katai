@@ -74,3 +74,16 @@ export function set(objectToUpdate: BasicObject, path: string, value: unknown) {
 export function get<T>(objectToRead: BasicObject, path: string) {
 	return getOrSetNestedValueInObject(objectToRead, path) as T extends null | undefined ? undefined : T;
 }
+
+export function debounce<T extends (...args: any[]) => void>(
+	callBack: T,
+	delay = 200
+): (...args: Parameters<T>) => void {
+	let timer: ReturnType<typeof setTimeout>;
+	return function (...args: unknown[]) {
+		clearTimeout(timer);
+		timer = setTimeout(function () {
+			callBack(...args);
+		}, delay);
+	};
+}
