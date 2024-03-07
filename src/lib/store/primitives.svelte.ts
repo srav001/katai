@@ -9,10 +9,10 @@ export function get<T, U extends any>(state: T, derivation: (state: T) => U): Ge
 	return () => derivation(state);
 }
 
-type Updater<T> = (val: T) => void;
+type Updater<T> = (payload: T) => void;
 export function update<T, U extends any, C extends any = unknown>(
 	store: PrimitiveStore<T>,
-	mutator: (state: T, val: C) => U
+	mutator: (state: T, payload: C) => U
 ): Updater<C> {
 	return (val: C) => {
 		mutator(store.value, val);
@@ -32,7 +32,7 @@ export function subscribe<T, U extends Subcribers<T>>(
 	state: T,
 	subscribers: [...U],
 	effect: (states: MapSources<U, T>) => void
-) {
+): () => void {
 	effectToSubMap.set(subscribers, new WeakSet().add(effect));
 
 	const toDestroyEffect = $effect.root(() => {
@@ -54,12 +54,60 @@ export function subscribe<T, U extends Subcribers<T>>(
 		onDestroy(toDestroy);
 	} catch (err) {
 		console.log(err);
+		if ((err as any).message === 'onDestroy can only be used during component initialisation.') {
+			// Handle silently
+		} else {
+			throw err;
+		}
 	}
 
 	return toDestroy;
 }
-export function clearCache(storeName: string) {
+export function clearCache(storeName: string): void {
 	if (_cachedStoresMap.has(storeName)) {
 		_cachedStoresMap.get(storeName)?.adapter.deleteFromCache(getCacheKey(storeName)!);
 	}
 }
+
+type Action = (state: any, payload: any) => void;
+type Getterx = (state: any) => any;
+
+interface StoreConfig {
+	name: string;
+	state: Record<string, any>;
+	getters: Record<string, Getterx>;
+	actions: Record<string, Action>;
+}
+
+type StoreReturnType<T extends StoreConfig> = {
+	[K in keyof T['getters']]: T['getters'][K] extends (state: any) => infer R ? () => R : never;
+} & {
+	[K in keyof T['actions']]: T['actions'][K] extends (state: any, payload: infer P) => void
+		? (payload: P) => void
+		: never;
+};
+
+declare function createBasicStore<T extends StoreConfig>(config: T): StoreReturnType<T>;
+
+// Usage
+const newStore = createBasicStore({
+	name: 'test',
+	state: {
+		counter: 0,
+		count: 0
+	},
+	getters: {
+		getCounter: (state) => state.counter,
+		getCount: (state) => String(state.count)
+	},
+	actions: {
+		updateCounter: (state, payload: number) => {
+			state.counter += payload;
+		},
+		updateCount: (state, payload: number) => {
+			state.count += payload;
+		}
+	}
+});
+
+newStore.getCount;
