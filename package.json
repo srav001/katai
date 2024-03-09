@@ -1,12 +1,12 @@
 {
 	"name": "katai",
-	"version": "0.0.10",
+	"version": "0.1.0",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "npm run package",
 		"preview": "vite preview",
 		"package": "svelte-kit sync && svelte-package -o dist && publint",
-		"prepublishOnly": "npm run package",
+		"publish": "npm run package && npm publish",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"test": "vitest",
@@ -21,6 +21,18 @@
 		".": {
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
+		},
+		"./primitives": {
+			"types": "./dist/store/primitives.svelte.d.ts",
+			"import": "./dist/store/primitives.svelte.js"
+		},
+		"./cache-adapters": {
+			"types": "./dist/cache-adapters/index.d.ts",
+			"import": "./dist/cache-adapters/index.js"
+		},
+		"./stores": {
+			"types": "./dist/stores/index.d.ts",
+			"import": "./dist/stores/index.js"
 		}
 	},
 	"files": [
