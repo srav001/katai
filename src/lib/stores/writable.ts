@@ -8,12 +8,9 @@ export function createWritable<T extends Record<string, any>>(initalValue: T) {
 		state = val;
 	});
 	return {
-		set: (val: T) => {
-			updater(val);
-		},
+		set: (val: T) => updater(val),
 		update: updater,
-		subscribe: (subscriber: (val: T) => void) => {
-			subscribe(store.value, [() => store.value], ([state]) => subscriber(state));
-		}
+		subscribe: (subscriber: (val: T) => void) =>
+			subscribe(store, [() => store.value], ([state]) => subscriber(state))
 	};
 }

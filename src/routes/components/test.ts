@@ -1,5 +1,5 @@
 import { createStore } from '$lib/store/index.svelte.js';
-import { get, subscribe, type MapSources, type Subcribers } from '$lib/store/primitives.svelte.js';
+import { get, subscribe, type MapSources, type Subscribers } from '$lib/store/primitives.svelte.js';
 import { createBasicStore } from '$lib/stores/basic.js';
 
 export const test = createStore('test', {
@@ -13,12 +13,12 @@ export const testStore = {
 	get $value() {
 		return test.value;
 	},
-	get: <U extends unknown>(derivation: (val: StoreType) => U) => get(test.value, () => derivation(test.value)),
-	subscribe: <T extends Subcribers<StoreType>>(states: [...T], effect: (states: MapSources<T, StoreType>) => void) =>
-		subscribe(test.value, states, effect)
+	get: <U extends unknown>(derivation: (val: StoreType) => U) => get(test, () => derivation(test.value)),
+	subscribe: <T extends Subscribers<StoreType>>(states: [...T], effect: (states: MapSources<T, StoreType>) => void) =>
+		subscribe(test, states, effect)
 };
 
-export const newStore = createBasicStore('test', {
+export const newStore = createBasicStore('tester', {
 	state: {
 		counter: 0,
 		count: 0

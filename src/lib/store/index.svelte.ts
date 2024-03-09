@@ -35,7 +35,7 @@ function createState<T>(storeName: string, storeState: T, options?: StoreOptions
 	}
 }
 
-type StoreOptions = {
+export type StoreOptions = {
 	cache?: CacheOptons;
 };
 

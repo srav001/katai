@@ -5,8 +5,8 @@ import { _cachedStoresMap, getCacheKey, handleCacheOfStore } from './cache.js';
 const effectToSubMap = new WeakMap<WeakKey, WeakSet<any>>();
 
 type Getter<T> = () => T;
-export function get<T, U extends any>(state: T, derivation: (state: T) => U): Getter<U> {
-	return () => derivation(state);
+export function get<T, U extends any>(store: PrimitiveStore<T>, derivation: (state: T) => U): Getter<U> {
+	return derivation.bind(null, store.value);
 }
 
 type Updater<T> = (payload: T) => void;
@@ -23,13 +23,13 @@ export function update<T, U extends any, C extends any = unknown>(
 }
 
 type Subscriber<T, U = unknown> = (state: T) => U;
-export type Subcribers<T> = Subscriber<T, unknown>[];
+export type Subscribers<T> = Subscriber<T, unknown>[];
 export type MapSources<T, U> = {
 	[K in keyof T]: T[K] extends Subscriber<U, infer V> ? V : T[K] extends object ? T[K] : never;
 };
 
-export function subscribe<T, U extends Subcribers<T>>(
-	state: T,
+export function subscribe<T, U extends Subscribers<T>>(
+	store: PrimitiveStore<T>,
 	subscribers: [...U],
 	effect: (states: MapSources<U, T>) => void
 ): () => void {
@@ -39,7 +39,7 @@ export function subscribe<T, U extends Subcribers<T>>(
 		$effect(() => {
 			const states = [] as MapSources<U, T>;
 			for (const stateFn of subscribers) {
-				states.push(stateFn(state));
+				states.push(stateFn(store.value));
 			}
 			effect(states);
 		});
@@ -68,46 +68,3 @@ export function clearCache(storeName: string): void {
 		_cachedStoresMap.get(storeName)?.adapter.deleteFromCache(getCacheKey(storeName)!);
 	}
 }
-
-type Action = (state: any, payload: any) => void;
-type Getterx = (state: any) => any;
-
-interface StoreConfig {
-	name: string;
-	state: Record<string, any>;
-	getters: Record<string, Getterx>;
-	actions: Record<string, Action>;
-}
-
-type StoreReturnType<T extends StoreConfig> = {
-	[K in keyof T['getters']]: T['getters'][K] extends (state: any) => infer R ? () => R : never;
-} & {
-	[K in keyof T['actions']]: T['actions'][K] extends (state: any, payload: infer P) => void
-		? (payload: P) => void
-		: never;
-};
-
-declare function createBasicStore<T extends StoreConfig>(config: T): StoreReturnType<T>;
-
-// Usage
-const newStore = createBasicStore({
-	name: 'test',
-	state: {
-		counter: 0,
-		count: 0
-	},
-	getters: {
-		getCounter: (state) => state.counter,
-		getCount: (state) => String(state.count)
-	},
-	actions: {
-		updateCounter: (state, payload: number) => {
-			state.counter += payload;
-		},
-		updateCount: (state, payload: number) => {
-			state.count += payload;
-		}
-	}
-});
-
-newStore.getCount;

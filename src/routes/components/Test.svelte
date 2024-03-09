@@ -1,14 +1,15 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
-	import { testStore } from './test.js';
+	import { newStore, testStore } from './test.js';
 
 	testStore.subscribe([(state) => state.counter], ([value]) => {
 		console.log('counter', value);
 	});
 
 	const interval = setInterval(() => {
+		newStore.updateCounter(1);
 		testStore.$value.counter = testStore.$value.counter + 1;
-	}, 1000);
+	}, 2000);
 
 	// cleanup
 	onDestroy(() => {
@@ -22,17 +23,11 @@
 		return 'odd';
 	});
 
-	const res = testStore.get((state) => state.counter);
-
-	$effect.pre(() => {
-		console.log('res', res());
-	});
-
-	$effect.pre(() => {
-		if (tes()) {
-			console.log(tes());
-		}
+	newStore.subscribe([(state) => state.counter], (states) => {
+		console.log('newStore', states[0]);
 	});
 </script>
 
 <h2>{tes()}</h2>
+
+<h2>{newStore.getCounter()}</h2>
