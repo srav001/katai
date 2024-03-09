@@ -1,8 +1,34 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import type { PrimitiveStore, StoreState } from '$lib/types/store.js';
-import { _cachedStoresMap, getCacheKey, type CacheOptons } from './cache.js';
+import { type CacheOptons } from './cache.js';
 
 const _stores: StoreState = $state({});
+
+let cacheModule: typeof import('./cache.js');
+
+export type StoreOptions = {
+	cache?: CacheOptons;
+};
+
+function handleCacheOfNewStore<T>(storeName: string, storeState: T, options: StoreOptions) {
+	if (!options?.cache?.key) {
+		options.cache!.key = storeName;
+	}
+	cacheModule.getCachedStoresMap().set(storeName, options.cache!);
+
+	const cacheKey = cacheModule.getCacheKey(storeName)!;
+	options.cache!.adapter.getFromCache(cacheKey).then((data) => {
+		if (
+			data &&
+			typeof data === 'object' &&
+			((!Array.isArray(data) && Object.keys(data).length > 0) || (Array.isArray(data) && data.length > 0))
+		) {
+			_stores[storeName] = data;
+		} else {
+			options.cache?.adapter.setToCache(cacheKey, storeState);
+		}
+	});
+}
 
 /**
  * It creates a store for the store and caches the store's state if the store is marked as
@@ -14,30 +40,18 @@ const _stores: StoreState = $state({});
 function createState<T>(storeName: string, storeState: T, options?: StoreOptions) {
 	_stores[storeName] = storeState;
 	if (options?.cache?.adapter) {
-		if (!options?.cache?.key) {
-			options.cache.key = storeName;
+		if (cacheModule) {
+			handleCacheOfNewStore(storeName, storeState, options);
+		} else {
+			import('./cache.js').then((module) => {
+				cacheModule = module;
+				handleCacheOfNewStore(storeName, storeState, options);
+			});
 		}
-		_cachedStoresMap.set(storeName, options.cache);
-
-		options.cache.adapter.getFromCache(getCacheKey(storeName)!).then((data) => {
-			if (
-				data &&
-				typeof data === 'object' &&
-				((!Array.isArray(data) && Object.keys(data).length > 0) || (Array.isArray(data) && data.length > 0))
-			) {
-				_stores[storeName] = data;
-			} else {
-				options.cache?.adapter.setToCache(getCacheKey(storeName)!, storeState);
-			}
-		});
 	} else if (options?.cache?.key && !options?.cache?.adapter) {
 		throw new Error(`Cache adapter is not provided for ${storeName} Store`);
 	}
 }
-
-export type StoreOptions = {
-	cache?: CacheOptons;
-};
 
 /**
  * The createStore function is used to create a primitve store.

@@ -9,7 +9,12 @@ export type CacheOptons = {
 };
 
 // eslint-disable-next-line sonarjs/no-unused-collection
-export const _cachedStoresMap = new Map<string, CacheOptons>();
+const _cachedStoresMap = new Map<string, CacheOptons>();
+
+export function getCachedStoresMap() {
+	return _cachedStoresMap;
+}
+
 export function getCacheKey(storeName: string) {
 	if (_cachedStoresMap.has(storeName)) {
 		return `${CACHE_KEY}-${storeName}-${_cachedStoresMap.get(storeName)!.key}`;

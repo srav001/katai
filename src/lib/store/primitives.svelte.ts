@@ -1,8 +1,8 @@
 import type { PrimitiveStore } from '$lib/types/store.js';
 import { onDestroy } from 'svelte';
-import { _cachedStoresMap, getCacheKey, handleCacheOfStore } from './cache.js';
 
 const effectToSubMap = new WeakMap<WeakKey, WeakSet<any>>();
+let cacheModule: typeof import('./cache.js');
 
 type Getter<T> = () => T;
 export function get<T, U extends any>(store: PrimitiveStore<T>, derivation: (state: T) => U): Getter<U> {
@@ -17,7 +17,14 @@ export function update<T, U extends any, C extends any = unknown>(
 	return (val: C) => {
 		mutator(store.value, val);
 		if (store.name) {
-			handleCacheOfStore(store.name, store.value);
+			if (cacheModule) {
+				cacheModule.handleCacheOfStore(store.name, store.value);
+			} else {
+				import('./cache.js').then((module) => {
+					cacheModule = module;
+					cacheModule.handleCacheOfStore(store.name, store.value);
+				});
+			}
 		}
 	};
 }
@@ -46,14 +53,13 @@ export function subscribe<T, U extends Subscribers<T>>(
 	});
 
 	function toDestroy() {
-		console.log('Unsubscribing');
 		toDestroyEffect();
+		effectToSubMap.get(subscribers)?.delete(effect);
 	}
 
 	try {
 		onDestroy(toDestroy);
 	} catch (err) {
-		console.log(err);
 		if ((err as any).message === 'onDestroy can only be used during component initialisation.') {
 			// Handle silently
 		} else {
@@ -64,7 +70,22 @@ export function subscribe<T, U extends Subscribers<T>>(
 	return toDestroy;
 }
 export function clearCache(storeName: string): void {
-	if (_cachedStoresMap.has(storeName)) {
-		_cachedStoresMap.get(storeName)?.adapter.deleteFromCache(getCacheKey(storeName)!);
+	if (cacheModule) {
+		if (cacheModule.getCachedStoresMap().has(storeName)) {
+			cacheModule
+				.getCachedStoresMap()
+				.get(storeName)
+				?.adapter.deleteFromCache(cacheModule.getCacheKey(storeName)!);
+		}
+	} else {
+		import('./cache.js').then((module) => {
+			cacheModule = module;
+			if (cacheModule.getCachedStoresMap().has(storeName)) {
+				cacheModule
+					.getCachedStoresMap()
+					.get(storeName)
+					?.adapter.deleteFromCache(cacheModule.getCacheKey(storeName)!);
+			}
+		});
 	}
 }
