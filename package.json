@@ -13,13 +13,21 @@
 		"format": "prettier --write ."
 	},
 	"type": "module",
-	"main": "./dist/index.js",
-	"module": "./dist/index.js",
-	"types": "./dist/index.d.ts",
+	"main": "./dist/stores/index.js",
+	"module": "./dist/stores/index.js",
+	"types": "/dist/stores/index.d.ts",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js"
+			"types": "./dist/stores/index.d.ts",
+			"import": "./dist/stores/index.js"
+		},
+		"./stores": {
+			"types": "./dist/stores/index.d.ts",
+			"import": "./dist/stores/index.js"
+		},
+		"./core": {
+			"types": "./dist/store/core.svelte.d.ts",
+			"import": "./dist/store/core.svelte.js"
 		},
 		"./primitives": {
 			"types": "./dist/store/primitives.svelte.d.ts",
@@ -28,10 +36,6 @@
 		"./cache-adapters": {
 			"types": "./dist/cache-adapters/index.d.ts",
 			"import": "./dist/cache-adapters/index.js"
-		},
-		"./stores": {
-			"types": "./dist/stores/index.d.ts",
-			"import": "./dist/stores/index.js"
 		}
 	},
 	"files": [

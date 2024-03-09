@@ -1,5 +1,5 @@
 import { createStore } from '$lib/index.js';
-import type { StoreOptions } from '$lib/store/index.svelte.js';
+import type { StoreOptions } from '$lib/store/core.svelte.js';
 import { clearCache, get, subscribe, update, type MapSources, type Subscribers } from '$lib/store/primitives.svelte.js';
 
 export type State = Record<string | number, any>;

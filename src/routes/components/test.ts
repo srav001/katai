@@ -1,4 +1,4 @@
-import { createStore } from '$lib/store/index.svelte.js';
+import { createStore } from '$lib/store/core.svelte.js';
 import { get, subscribe, type MapSources, type Subscribers } from '$lib/store/primitives.svelte.js';
 import { createBasicStore } from '$lib/stores/basic.js';
 

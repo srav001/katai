@@ -1,5 +1,5 @@
-import { createStore, type StoreOptions } from '../store/index.svelte.js';
-import { subscribe, update } from '../store/primitives.svelte.js';
+import { createStore, type StoreOptions } from '../store/core.svelte.js';
+import { clearCache, subscribe, update } from '../store/primitives.svelte.js';
 
 export function createWritable<T extends Record<string, any>>(
 	initalValue: T,
@@ -13,9 +13,10 @@ export function createWritable<T extends Record<string, any>>(
 	});
 	return {
 		get: () => store.value,
-		set: (val: T) => updater(val),
+		set: updater,
 		update: updater,
 		subscribe: (subscriber: (val: T) => void) =>
-			subscribe(store, [() => store.value], ([state]) => subscriber(state))
+			subscribe(store, [() => store.value], ([state]) => subscriber(state)),
+		clearCache: () => clearCache(storeName)
 	};
 }

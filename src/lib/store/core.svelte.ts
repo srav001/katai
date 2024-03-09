@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import type { PrimitiveStore, StoreState } from '$lib/types/store.js';
-import { type CacheOptons } from './cache.js';
+import type { CacheOptons } from './cache.js';
 
 const _stores: StoreState = $state({});
 

@@ -5,7 +5,7 @@ async function getFromCache<T>(key: string, decoder: (val: string) => any = JSON
 }
 
 function setToCache<T>(key: string, value: T, encoder: (val: any) => string = JSON.stringify) {
-	// We need to stringify the value because idb-keyval doesn't support proxies.
+	// We need to stringify the value because idb-keyval doesn't support proxies. We could also use unstate, but stringify works well.
 	set(key, encoder(value));
 }
 
