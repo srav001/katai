@@ -3,7 +3,7 @@
 The project is still in development. Hoping to release it right before Svelte 5 release. You can find usable examples in `src/routes/+page.svelte`.
 
 <input type="checkbox" checked>
-<label>Virtual Store with Runes ( Removed to re-implement using new primitives )</label><br>
+<label>[Virtual Store with Runes](https://github.com/srav001/katai/blob/a9ea77e81d8155bd39d25fc3bffe1412e88f75e1/src/routes/stores.ts#L9) ( Removed to re-implement using new primitives )</label><br>
 <input type="checkbox" checked>
 <label>Re-factor for Primitves</label><br>
 <input type="checkbox" checked>
