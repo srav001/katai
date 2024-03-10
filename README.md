@@ -2,6 +2,24 @@
 
 The project is still in development. Hoping to release it right before Svelte 5 release. You can find usable examples in `src/routes/+page.svelte`.
 
+<input type="checkbox" checked>
+<label>Virtual Store with Runes ( Removed to re-implement using new primitives )</label><br>
+<input type="checkbox" checked>
+<label>Re-factor for Primitves</label><br>
+<input type="checkbox" checked>
+<label>Add caching support</label><br>
+<input type="checkbox" checked>
+<label>Add cache adapters</label><br>
+<input type="checkbox" checked>
+<label>Add Basic Store</label><br>
+<input type="checkbox" checked>
+<label>Add Writable Store</label><br>
+<input type="checkbox">
+<label>Add Virtual Store</label><br>
+<input type="checkbox">
+<label>Sync between tabs</label><br>
+
+
 # katai
 
 Kaṭai (meaning store in Tamil) is a simple and lightweight store implementation for Svelte 5.
@@ -14,9 +32,13 @@ Kaṭai (meaning store in Tamil) is a simple and lightweight store implementatio
 
 ## About
 
-The basics of Katai is a few primitives that can be used to build any type of store. You can also build the store type you need with the help of these primitives. We also provide a few pre-built variations to choose from the Stores options. Whichever feels the most suitable can be used.
+The basics of Katai is a few primitives that can be used to build any type of store. You can also build the store type you need with the help of these primitives.
+
+We also provide a few pre-built variations to choose from the Stores options. Whichever feels the most suitable can be used.
 
 We do not wish to restrict you to a particular pattern for all your stores. You can copy the one of the current stores implementation as a base and build from on top it.
+
+By using our primitives the stores you create will also get all the features our primitives support like caching with the help of adapters. By default we provide 2 adapters for localStorage and Index DB. 
 
 ## Primitives
 
@@ -218,7 +240,7 @@ This example demonstrates how to create a basic store for managing a counter's s
 
 The `createWritable` function is designed to create a writable store that allows for managing and tracking state changes in a structured way. It's based on the writable from Svelte.
 
-## Function Signature
+### Function Signature
 
 ```typescript
 function createWritable<T extends Record<string, any>>(
@@ -234,7 +256,7 @@ function createWritable<T extends Record<string, any>>(
 };
 ```
 
-## Parameters
+### Parameters
 
 - `initalValue: T` - The initial value to be stored. It must be an object that extends `Record<string, any>`. This value serves as the starting point for the store's state.
 
@@ -242,7 +264,7 @@ function createWritable<T extends Record<string, any>>(
 
 - `storeOptions: StoreOptions` (optional) - Additional options for store creation. These options can include configuration settings or options specific to the underlying store implementation. Providing this parameter allows for further customization of the store's behavior.
 
-## Return Value
+### Return Value
 
 The function returns an object containing the following properties:
 
