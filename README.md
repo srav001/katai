@@ -7,6 +7,7 @@ The project is still in development. Hoping to release it right before Svelte 5 
 Kaṭai (meaning store in Tamil) is a simple and lightweight store implementation for Svelte 5.
 
 ## Contents
+
 - [About](#about)
 - [Primitives](#primitives)
 - [Stores](#stores)
@@ -57,12 +58,13 @@ PrimitiveStore<{
 ### Getter Function
 
 ```typescript
-function get<T, U>(store: PrimitiveStore<T>, derivation: (state: T) => U): Getter<U>
+function get<T, U>(store: PrimitiveStore<T>, derivation: (state: T) => U): Getter<U>;
 ```
 
 The `get` function is designed to create a getter function from a store and a derivation function. It applies the derivation function to the store's value, returning a new value of type `U`.
 
 - **Parameters:**
+
   - `store`: An instance of `PrimitiveStore<T>`.
   - `derivation`: A function that takes the current state of type `T` and returns a value of type `U`.
 
@@ -71,12 +73,13 @@ The `get` function is designed to create a getter function from a store and a de
 ### Updater Function
 
 ```typescript
-function update<T, U, C = unknown>(store: PrimitiveStore<T>, mutator: (state: T, payload: C) => U): Updater<C>
+function update<T, U, C = unknown>(store: PrimitiveStore<T>, mutator: (state: T, payload: C) => U): Updater<C>;
 ```
 
 The `update` function updates the store's value using a mutator function and a payload. It also handles caching if applicable.
 
 - **Parameters:**
+
   - `store`: A `PrimitiveStore<T>` object.
   - `mutator`: A function that updates the state of the store based on the provided payload.
 
@@ -85,12 +88,17 @@ The `update` function updates the store's value using a mutator function and a p
 ### Subscribe Function
 
 ```typescript
-function subscribe<T, U extends Subscribers<T>>(store: PrimitiveStore<T>, subscribers: [...U], effect: (states: MapSources<U, T>) => void): () => void
+function subscribe<T, U extends Subscribers<T>>(
+  store: PrimitiveStore<T>,
+  subscribers: [...U],
+  effect: (states: MapSources<U, T>) => void
+): () => void;
 ```
 
 The `subscribe` function allows subscribing to a primitive store with specified subscribers and an effect to be executed.
 
 - **Parameters:**
+
   - `store`: A `PrimitiveStore<T>`.
   - `subscribers`: An array of subscriber functions.
   - `effect`: A function that performs an action based on the states provided.
@@ -100,7 +108,7 @@ The `subscribe` function allows subscribing to a primitive store with specified 
 ### ClearCache Function
 
 ```typescript
-function clearCache(storeName: string): void
+function clearCache(storeName: string): void;
 ```
 
 The `clearCache` function clears the cache for a specific store if it exists.
@@ -109,7 +117,6 @@ The `clearCache` function clears the cache for a specific store if it exists.
   - `storeName`: The name of the store to clear from the cache.
 
 This module provides a robust solution for managing state in TypeScript applications, with features like caching and subscription to state changes, enhancing performance and reactivity.
-
 
 #### EXAMPLE
 
@@ -153,9 +160,9 @@ The `createBasicStore` function is designed to create a basic store structure in
 
 ```typescript
 function createBasicStore<S extends State, G extends Getters<S>, A extends Actions<S>>(
-    storeName: string,
-    options: Store<S, G, A>,
-    settings?: StoreOptions
+  storeName: string,
+  options: Store<S, G, A>,
+  settings?: StoreOptions
 ): BasicStore<S, G, A>;
 ```
 
@@ -186,14 +193,14 @@ function createBasicStore<S extends State, G extends Getters<S>, A extends Actio
 ```typescript
 // Define the initial state, getters, and actions for a simple counter store.
 const counterOptions = {
-    state: { count: 0 },
-    getters: {
-        doubleCount: (state) => state.count * 2,
-    },
-    actions: {
-        increment: (state) => ({ count: state.count + 1 }),
-        decrement: (state) => ({ count: state.count - 1 }),
-    },
+  state: { count: 0 },
+  getters: {
+    doubleCount: (state) => state.count * 2
+  },
+  actions: {
+    increment: (state) => ({ count: state.count + 1 }),
+    decrement: (state) => ({ count: state.count - 1 })
+  }
 };
 
 // Create the counter store.
@@ -209,22 +216,22 @@ This example demonstrates how to create a basic store for managing a counter's s
 
 ### Writable Store
 
-The `createWritable` function is designed to create a writable store that allows for managing and tracking state changes in a structured way. It's based on the writable from Svelte. 
+The `createWritable` function is designed to create a writable store that allows for managing and tracking state changes in a structured way. It's based on the writable from Svelte.
 
 ## Function Signature
 
 ```typescript
 function createWritable<T extends Record<string, any>>(
-    initalValue: T,
-    storeName?: string,
-    storeOptions?: StoreOptions
+  initalValue: T,
+  storeName?: string,
+  storeOptions?: StoreOptions
 ): {
-    get: () => T;
-    set: (val: T) => void;
-    update: (callback: (val: T) => T) => void;
-    subscribe: (subscriber: (val: T) => void) => void;
-    clearCache: () => void;
-}
+  get: () => T;
+  set: (val: T) => void;
+  update: (callback: (val: T) => T) => void;
+  subscribe: (subscriber: (val: T) => void) => void;
+  clearCache: () => void;
+};
 ```
 
 ## Parameters
@@ -253,8 +260,8 @@ The function returns an object containing the following properties:
 
 ```typescript
 interface User {
-    id: string;
-    name: string;
+  id: string;
+  name: string;
 }
 
 // Creating a writable store for user data
@@ -262,7 +269,7 @@ const userStore = createWritable<User>({ id: '123', name: 'John Doe' });
 
 // Subscribing to changes in the user store
 userStore.subscribe((currentUser) => {
-    console.log('Current user:', currentUser);
+  console.log('Current user:', currentUser);
 });
 
 // Updating the user's name
@@ -278,4 +285,4 @@ console.log('Current user:', userStore.get());
 userStore.clearCache();
 ```
 
-This documentation provides a comprehensive overview of the `createWritable` function, its parameters, return value, and usage. 
+This documentation provides a comprehensive overview of the `createWritable` function, its parameters, return value, and usage.
