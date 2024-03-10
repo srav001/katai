@@ -1,6 +1,8 @@
 import { createStore, type StoreOptions } from '../store/core.svelte.js';
 import { clearCache, get, subscribe, update } from '../store/primitives.svelte.js';
 
+// BASED BY SVELTE WRITABLE STORE
+
 /**
  * The `createWritable` function creates a writable store with initial value and provides
  * methods for getting, setting, updating, subscribing to changes, and clearing cache.
