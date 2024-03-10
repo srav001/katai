@@ -19,6 +19,14 @@ The project is still in development. Hoping to release it right before Svelte 5 
 <input type="checkbox">
 <label>Sync between tabs</label><br>
 
+- [x] Re-factor for Primitves
+- [x] Add caching support
+- [x] Add cache adapters
+- [x] Add Basic Store
+- [x] Add Writable Store
+- [ ] Add Virtual Store
+- [ ] Sync between tabs
+
 
 # katai
 
