@@ -1,192 +1,153 @@
 ## ❗️ In Development ❗️
 
-The project is still in development. Hoping to release it right before Svelte 5 release. You can find usable examples in src/routes/+page.svelte.
+The project is still in development. Hoping to release it right before Svelte 5 release. You can find usable examples in `src/routes/+page.svelte`.
 
 # katai
 
-Kaṭai (meaning store in Tamil) is a simple and lightweight store for Svelte 5.
+Kaṭai (meaning store in Tamil) is a simple and lightweight store implementation for Svelte 5.
 
-It was based on top of the familiar APIs of Svelte 4 (and Svelte 3) stores while offering more functionality including adapters to easily cache the stores.
+The basics of Katai is a few primitives that can be used to build any type of store. You can also build the store type you need with the help of these primitives. We also provide a few pre-built variations to choose from the Stores options. Whichever feels the most suitable can be used.
 
-All while still being really small(less than 2kb gzipped including cache adapters).
+We do not wish to restrict you to a particular pattern for all your stores. You can copy the one of the current stores implementation as a base and build from on top it.
 
-[Was earlier called svelte-virtual-store]
+## Primitives
 
-## createStore
+### createStore
 
-The `createStore` function is used to create a new store. It takes two parameters: `store` and `mainStoreKey`.
+The function `createStore` creates a primitive store with a specified name and initial state.
 
-### Parameters
+- @param {string} storeName - The `storeName` parameter is a string that represents the name of the store being created. It is a required parameter for creating a new store.
+- @param {InferedState} storeState - The `storeState` parameter in the `createStore` function represents the initial state or value that will be stored in the created store. It is the data that the store will manage and provide access to.
+- @param {StoreOptions} [options] - The `options` parameter in the `createStore` function is an optional parameter that allows you to provide additional configuration options for creating the store. It is of type `StoreOptions`, which likely contains properties or settings that can be used to customize the behavior of the store creation process like adding cache adapters.
+- @returns A PrimitiveStore object with the store name and a getter function for the store value.
 
-- `store` (NewStore<T>): The store object to create the store from.
-- `config`: The config for the store. We can provide the cache options including the adapter.
+#### EXAMPLE
 
-### Return Value
+```ts
+export const counterCoreStore = createStore('test', {
+  counter: 0
+});
 
-Returns a `Store` object with several methods to interact with the store's state, including `get`, `set`, `update`, `next`, and `has`.
+// Returns
+PrimitiveStore<{
+  counter: number;
+}>;
+```
 
-### Example
+### get
 
-```typescript
-import { createStore, idbAdapter } from 'katai';
+The `get` function takes a store and a derivation function, and returns a getter function that applies the derivation function to the store's value.
 
-type one = {
-  name: 'test';
-  state: {
-    foo: {
-      bar: {
-        baz: string;
-      };
-    };
-  };
+- @param store - `PrimitiveStore<T>` is a generic type representing a store that holds a value of type `T`. It seems like the `store` parameter is expected to be an instance of this `PrimitiveStore` type.
+- @param derivation - The `derivation` parameter is a function that takes the current state of type `T` as input and returns a value of type `U`. It is used to derive a new value based on the current state stored in the `PrimitiveStore`.
+- @returns A `Getter<U>` function is being returned. This function takes no arguments and returns a value of type `U`. The value returned is the result of applying the `derivation` function to the `store.value`.
+
+### update
+
+The function `update` takes a store, a mutator function, and a payload, and updates the store's value using the mutator function while handling caching if applicable.
+
+- @param store - The `store` parameter is a PrimitiveStore object that holds a value of type T.
+- @param mutator - The `mutator` parameter is a function that takes the current state of the store (`T`) and a payload of type `C`, and returns a new state of type `U`. It is used to update the state of the store based on the provided payload.
+- @returns The `update` function returns an `Updater` function that takes a value of type `C` as an argument.
+
+### subscribe
+
+The `subscribe` function allows for subscribing to a primitive store with specified subscribers and an effect to be executed.
+
+- @param store - The `store` parameter is a PrimitiveStore that holds the state of type T.
+- @param subscribers - Subscribers are functions that subscribe to changes in the store's state. They are typically used to extract specific pieces of state from the store and react to changes in those pieces of state.
+- @param effect - The `effect` parameter in the `subscribe` function is a function that takes a `MapSources` object as its argument and performs some action based on the states provided in the `MapSources` object.
+- @returns The `subscribe` function returns a cleanup function that can be used to unsubscribe the effect and remove it from the list of subscribers.
+
+#### EXAMPLE
+
+```ts
+export const test = createStore('test', {
+  counter: 0
+});
+
+type StoreType = (typeof test)['value'];
+
+export const testStore = {
+  get $value() {
+    return test.value;
+  },
+  get: <U extends unknown>(derivation: (val: StoreType) => U) => get(test, () => derivation(test.value)),
+  subscribe: <T extends Subscribers<StoreType>>(states: [...T], effect: (states: MapSources<T, StoreType>) => void) =>
+    subscribe(test, states, effect)
 };
 
-createStore(
-  {
-    name: 'test',
-    state: {
-      foo: {
-        bar: {
-          baz: 'heo'
-        }
-      }
-    }
-  } satisfies one,
-  {
-    cache: {
-      adapter: idbAdapter
+testStore.subscribe([(state) => state.counter], ([value]) => {
+  console.log('counter', value);
+});
+
+const interval = setInterval(() => {
+  testStore.$value.counter = testStore.$value.counter + 1;
+}, 2000);
+
+// cleanup
+onDestroy(() => {
+  clearInterval(interval);
+});
+```
+
+## Stores
+
+### Basic Store
+
+The function `createBasicStore` creates a basic store with state, getters, and actions based on the provided options.
+
+- @param {string} storeName - The `storeName` parameter is a string that represents the name of the store being created.
+- @param options - The `options` parameter in the `createBasicStore` function is an object that contains the following properties:
+- @param {StoreOptions} [settings] - The `settings` parameter in the `createBasicStore` function is an optional parameter of type `StoreOptions`. It allows you to provide additional settings or configurations for the store creation process. These settings can include options such as the store's persistence mechanism using cache adapters.
+- @returns The `createBasicStore` function returns an object of type `BasicStore<S, G, A>`, which includes the state, getters, actions, and additional methods like `clearCache` and `subscribe`.
+
+#### EXAMPLE
+
+```ts
+const newStore = createBasicStore('tester', {
+  state: {
+    counter: 0,
+    count: 0
+  },
+  getters: {
+    getCounter: (state) => state.counter,
+    getCount: (state) => String(state.count)
+  },
+  actions: {
+    updateCounter: (state, payload: number) => {
+      state.counter += payload;
+    },
+    updateCount: (state, payload: number) => {
+      state.count += payload;
     }
   }
-);
-```
+});
 
-```typescript
-const test = store.get('check.one.two');
+const interval = setInterval(() => {
+  newStore.updateCounter(1);
+}, 2000);
 
-store.subscribe('check.one.two', (test) => {
-  console.log('test - ', test);
+// cleanup
+onDestroy(() => {
+  clearInterval(interval);
+});
+
+newStore.subscribe([(state) => state.counter], (states) => {
+  console.log('newStore', states[0]);
 });
 ```
 
-Here typeof `test` will be `{ three: string; }`
+### Writable Store
 
-```typescript
-store.set('check.one.two.three', 0);
-```
+The `createWritable` function creates a writable store with initial value and provides methods for getting, setting, updating, subscribing to changes, and clearing cache.
 
-This will error as `Argument of type 'number' is not assignable to parameter of type 'string'.`
-
-You can subscribe to store changes for `a particular key` or for `deep changes`. When used inside `Svelte` component they will be `unSubscribed(auto-cleaned up)`.
-
-```typescript
-store.subscribe('check.one.two', (test) => {
-  console.log('test - ', test);
-});
-// This will only run when two property of one object of check object changes
-```
-
-If the value of a key is an POJO then will be able to subscribe deeply with `*` in the key.
-
-```typescript
-store.subscribe('check.one.*', (val) => {
-  console.log('check.one.* - ', val);
-});
-// This will run when any change is made to one object and it's children.
-```
-
-This is not possible as the value of `three` is `string`
-
-```typescript
-// You will get the below error
-store.subscribe('check.one.two.three.*', (val) => {
-  console.log('check.one.* - ', val);
-});
-// Argument of type '"check.one.two.three.*"' is not assignable to parameter of type '"" | "check" | "check.*" | "check.one" | "check.one.*" | "check.one.two" | "check.one.two.*" | "check.one.two.three"'
-```
-
-## useStore Function
-
-The `useStore` function is used to read and write data to the state of a store.
-
-### Parameters
-
-- `storeName` (string): The name of the store.
-
-### Return Value
-
-Returns a `StoreInstance` object with several methods to interact with the store's state, including `get`, `update`, `write`, `writeUpdate`, `next`, and `has`.
-
-### Example
-
-```typescript
-// Use an existing store
-const userStore = useStore<User>('users');
-
-// Use the store's methods
-userStore.get('username');
-userStore.set('username', 'newUsername');
-```
-
-## The `Store` object
-
-Returns a `storeObj` object with the following methods:
-
-- `get(key, defaultValue)`: Returns the value of the specified key in the store.
-- `set(key, value)`: Sets the value of the specified key. If the key does not exist, an error will be thrown.
-- `update(key, callback)`: Updates the value of the specified key using the provided callback function.
-- `next(callback, key)`: Calls the provided callback function with the value of the specified key.
-- `subscribe(key, subscriber)`: Adds a subscriber function to the specified key.
-- `unsubscribe(key, subscriber)`: Removes a subscriber function from the specified key.
-- `removeSubscribers(key)`: Removes all subscribers from the specified key.
-- `clearCache()`: Clears the cache of the store.
-- `dropStore()`: Deletes the specified store from the store.
-
-## Examples
-
-```javascript
-// Create a new store
-const myStore = createStore({ name: 'myStore', state: { myKey: 'value' } });
-
-// Add a subscriber to a key
-myStore.subscribe('myKey', (value, oldValue) => {
-  console.log(`Value of myKey changed from ${oldValue} to ${value}`);
-});
-
-// Set the value of a key
-myStore.set('myKey', 'newValue');
-
-// Output: "Value of myKey changed from undefined to newValue"
-
-// Create a new store
-const userStore = createStore({ name: 'users', state: { username: 'value' } });
-
-// Add a subscriber to a key
-userStore.subscribe('username', (value, oldValue) => {
-  console.log(`Username changed from ${oldValue} to ${value}`);
-});
-
-// Set the value of a key
-userStore.set('username', 'newUsername');
-
-// Output: "Username changed from undefined to newUsername"
-
-// Update the value of a key
-userStore.update('username', (oldValue) => oldValue + '_updated');
-
-// Output: "Username changed from newUsername to newUsername_updated"
-
-// Check if a key exists in the store
-console.log(userStore.has('username')); // Output: true
-
-// Get the value of a key
-console.log(userStore.get('username').value()); // Output: newUsername_updated
-
-// Remove a subscriber from a key
-userStore.unsubscribe('username', subscriberFunction);
-
-// Unsubscribe all subscribers from a key
-userStore.removeSubscribers('username');
-
-// Drop a store
-userStore.dropStore();
-```
+- @param {T} initalValue - The `initalValue` parameter is the initial value that will be stored in the writable store. It should be an object of type `T`, which extends `Record<string, any>`. This initial value will be used as the starting value for the store.
+- @param storeName - The `storeName` parameter is a string that represents the name of the store where the data will be stored. If no `storeName` is provided, a random string will be generated for the store name.
+- @param {StoreOptions} [storeOptions] - The `storeOptions` parameter in the `createWritable` function is an optional parameter that allows you to specify additional options for the store creation. These options can include configuration settings or options specific to the underlying store implementation. If provided, these options will be used when creating the store using the `create
+- @returns An object is being returned with the following properties:
+- - get: a function that retrieves the current value from the store
+- - set: a function that updates the value in the store
+- - update: a function that takes a callback to update the value in the store
+- - subscribe: a function that subscribes to changes in the store and calls a subscriber function
+- - clearCache: a function that

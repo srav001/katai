@@ -41,7 +41,6 @@ function handleCacheOfNewStore<T>(storeName: string, storeState: T, options: Sto
 	});
 }
 
-
 /**
  * The function `createState` creates a new store with the provided state and handles caching based on
  * the options provided.
@@ -79,7 +78,7 @@ function createState<T>(storeName: string, storeState: T, options?: StoreOptions
  * @param {StoreOptions} [options] - The `options` parameter in the `createStore` function is an
  * optional parameter that allows you to provide additional configuration options for creating the
  * store. It is of type `StoreOptions`, which likely contains properties or settings that can be used
- * to customize the behavior of the store creation process. These options could
+ * to customize the behavior of the store creation process like adding cache adapters.
  * @returns A PrimitiveStore object with the store name and a getter function for the store value.
  */
 export function createStore<InferedState>(
