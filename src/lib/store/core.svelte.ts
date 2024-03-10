@@ -10,6 +10,17 @@ export type StoreOptions = {
 	cache?: CacheOptons;
 };
 
+/**
+ * The function `handleCacheOfNewStore` manages caching for a new store by checking if data is already
+ * cached and setting it if not.
+ * @param {string} storeName - The `storeName` parameter is a string that represents the name of the
+ * store for which caching is being handled.
+ * @param {T} storeState - `storeState` is the initial state of the store that will be cached. It
+ * represents the data that will be stored in the cache for the specified `storeName`.
+ * @param {StoreOptions} options - The `options` parameter is an object that contains configuration
+ * options for the store, including a `cache` property that itself is an object with properties like
+ * `key` and `adapter`.
+ */
 function handleCacheOfNewStore<T>(storeName: string, storeState: T, options: StoreOptions) {
 	if (!options?.cache?.key) {
 		options.cache!.key = storeName;
@@ -31,11 +42,15 @@ function handleCacheOfNewStore<T>(storeName: string, storeState: T, options: Sto
 }
 
 /**
- * It creates a store for the store and caches the store's state if the store is marked as
- * cacheable
- * @param {string} storeName - The name of the store. It is also used as part of cache key.
- * @param {T} storeName - T - This is the state of the store.
- * @returns A function that takes a store and returns a store.
+ * The function `createState` creates a new store with the provided state and handles caching based on
+ * the options provided.
+ * @param {string} storeName - The `storeName` parameter is a string that represents the name of the
+ * store being created.
+ * @param {T} storeState - The `storeState` parameter in the `createState` function represents the
+ * initial state of the store that you want to create. It is the data structure that will be stored and
+ * managed by the store.
+ * @param {StoreOptions} [options] - The `options` parameter in the `createState` function is an
+ * optional object that can contain the following properties:
  */
 function createState<T>(storeName: string, storeState: T, options?: StoreOptions) {
 	_stores[storeName] = storeState;
@@ -54,7 +69,17 @@ function createState<T>(storeName: string, storeState: T, options?: StoreOptions
 }
 
 /**
- * The createStore function is used to create a primitve store.
+ * The function `createStore` creates a primitive store with a specified name and initial state.
+ * @param {string} storeName - The `storeName` parameter is a string that represents the name of the
+ * store being created. It is a required parameter for creating a new store.
+ * @param {InferedState} storeState - The `storeState` parameter in the `createStore` function
+ * represents the initial state or value that will be stored in the created store. It is the data that
+ * the store will manage and provide access to.
+ * @param {StoreOptions} [options] - The `options` parameter in the `createStore` function is an
+ * optional parameter that allows you to provide additional configuration options for creating the
+ * store. It is of type `StoreOptions`, which likely contains properties or settings that can be used
+ * to customize the behavior of the store creation process like adding cache adapters.
+ * @returns A PrimitiveStore object with the store name and a getter function for the store value.
  */
 export function createStore<InferedState>(
 	storeName: string,
