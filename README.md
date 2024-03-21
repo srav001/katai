@@ -11,6 +11,8 @@ The project is still in development. Hoping to release it right before Svelte 5 
 - [ ] Add Virtual Store
 - [ ] Sync between tabs
 
+- [ ] DOCS (70%)
+
 
 # katai
 
@@ -41,7 +43,7 @@ By using our primitives the stores you create will also get all the features our
 - [Subscribe Function](#subscribe-function)
 - [ClearCache Function](#clearcache-function)
 
-### createStore
+### Create Store
 
 Creates a primitive store with a specified name and initial state. It optionally configures caching for the store if specified in the options.
 
@@ -53,7 +55,7 @@ Creates a primitive store with a specified name and initial state. It optionally
 
 #### Returns
 
-- `PrimitiveStore<InferedState>`: An object representing the created store. It includes the store name and a getter function for the store value.
+- `PrimitiveStore<InferedState>`: An object representing the created store. It includes the store name and the state for the store value.
 
 #### Usage Example
 
@@ -69,7 +71,7 @@ PrimitiveStore<{
 }>;
 ```
 
-### Getter Function
+### Getter
 
 ```typescript
 function get<T, U>(store: PrimitiveStore<T>, derivation: (state: T) => U): Getter<U>;
@@ -84,7 +86,7 @@ The `get` function is designed to create a getter function from a store and a de
 
 - **Returns:** A `Getter<U>` function that, when called, returns a value of type `U`.
 
-### Updater Function
+### Updater
 
 ```typescript
 function update<T, U, C = unknown>(store: PrimitiveStore<T>, mutator: (state: T, payload: C) => U): Updater<C>;
@@ -99,7 +101,7 @@ The `update` function updates the store's value using a mutator function and a p
 
 - **Returns:** An `Updater<C>` function that takes a payload of type `C`.
 
-### Subscribe Function
+### Subscribe
 
 ```typescript
 function subscribe<T, U extends Subscribers<T>>(
@@ -119,7 +121,7 @@ The `subscribe` function allows subscribing to a primitive store with specified 
 
 - **Returns:** A cleanup function to unsubscribe the effect.
 
-### ClearCache Function
+### ClearCache
 
 ```typescript
 function clearCache(storeName: string): void;
@@ -169,16 +171,6 @@ onDestroy(() => {
 ### Basic Store
 
 The `createBasicStore` function is designed to create a basic store structure in TypeScript, facilitating state management in applications. This function is part of a larger library that provides utilities for creating, managing, and interacting with stores. Below is a detailed documentation of the `createBasicStore` function, including its parameters, return type, and usage examples.
-
-## Function Signature
-
-```typescript
-function createBasicStore<S extends State, G extends Getters<S>, A extends Actions<S>>(
-  storeName: string,
-  options: Store<S, G, A>,
-  settings?: StoreOptions
-): BasicStore<S, G, A>;
-```
 
 ### Parameters
 
@@ -230,23 +222,7 @@ This example demonstrates how to create a basic store for managing a counter's s
 
 ### Writable Store
 
-The `createWritable` function is designed to create a writable store that allows for managing and tracking state changes in a structured way. It's based on the writable from Svelte.
-
-### Function Signature
-
-```typescript
-function createWritable<T extends Record<string, any>>(
-  initalValue: T,
-  storeName?: string,
-  storeOptions?: StoreOptions
-): {
-  get: () => T;
-  set: (val: T) => void;
-  update: (callback: (val: T) => T) => void;
-  subscribe: (subscriber: (val: T) => void) => void;
-  clearCache: () => void;
-};
-```
+The `createWritable` function is designed to create a writable store that's based on the writable from Svelte.
 
 ### Parameters
 
@@ -299,4 +275,3 @@ console.log('Current user:', userStore.get());
 userStore.clearCache();
 ```
 
-This documentation provides a comprehensive overview of the `createWritable` function, its parameters, return value, and usage.
