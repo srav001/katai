@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { newStore, testStore } from './test.js';
+	import { createVirtualStore } from '$lib/stores/virtual-store.js';
 
 	testStore.subscribe([(state) => state.counter], ([value]) => {
 		console.log('counter', value);
@@ -26,6 +27,21 @@
 	newStore.subscribe([(state) => state.counter], (states) => {
 		console.log('newStore', states[0]);
 	});
+
+	const virtualStore = createVirtualStore(
+		{
+			a: {
+				b: {
+					c: {
+						d: 1
+					}
+				}
+			}
+		},
+		'virtualStore'
+	);
+
+	virtualStore.get('a.b');
 </script>
 
 <h2>{tes()}</h2>

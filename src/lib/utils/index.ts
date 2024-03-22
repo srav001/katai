@@ -17,6 +17,13 @@ function getOrSetNestedValueInObject(
 	if (objectToUpdate === undefined) {
 		return undefined;
 	}
+	if (path === '') {
+		if (action === 'set') {
+			objectToUpdate = value as BasicObject;
+		}
+		return objectToUpdate;
+	}
+
 	const pathList = path.split('.');
 	const pathArrayLength = pathList.length;
 

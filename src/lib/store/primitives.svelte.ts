@@ -77,7 +77,7 @@ export function subscribe<T, U extends Subscribers<T>>(
 ): () => void {
 	effectToSubMap.set(subscribers, new WeakSet().add(effect));
 
-	const toDestroyEffect = $effect.root(() => {
+	const effectToDestroy = $effect.root(() => {
 		$effect(() => {
 			const states = [] as MapSources<U, T>;
 			for (const stateFn of subscribers) {
@@ -88,7 +88,7 @@ export function subscribe<T, U extends Subscribers<T>>(
 	});
 
 	function toDestroy() {
-		toDestroyEffect();
+		effectToDestroy();
 		effectToSubMap.get(subscribers)?.delete(effect);
 	}
 
