@@ -1,49 +1,25 @@
 <script lang="ts">
-	import { onDestroy } from 'svelte';
-	import { newStore, testStore } from './test.js';
-	import { createVirtualStore } from '$lib/stores/virtual-store.js';
+	import { createWritable } from '$lib/stores/writable.js';
 
-	testStore.subscribe([(state) => state.counter], ([value]) => {
-		console.log('counter', value);
+	const tes = createWritable({
+		counter: 1
 	});
 
-	const interval = setInterval(() => {
-		newStore.updateCounter(1);
-		testStore.$value.counter = testStore.$value.counter + 1;
-	}, 2000);
+	tes.set({ counter: 101 });
 
-	// cleanup
-	onDestroy(() => {
-		clearInterval(interval);
+	console.log('writable store - ', tes.get().counter);
+
+	setInterval(() => {
+		console.log('\nincremented');
+		tes.update((state) => {
+			state.counter += 1;
+			return state;
+		});
+	}, 1000);
+
+	tes.subscribe((state) => {
+		console.log('writable store');
 	});
-
-	const tes = testStore.get((state) => {
-		if (state.counter % 2 === 0) {
-			return 'even';
-		}
-		return 'odd';
-	});
-
-	newStore.subscribe([(state) => state.counter], (states) => {
-		console.log('newStore', states[0]);
-	});
-
-	const virtualStore = createVirtualStore(
-		{
-			a: {
-				b: {
-					c: {
-						d: 1
-					}
-				}
-			}
-		},
-		'virtualStore'
-	);
-
-	virtualStore.get('a.b');
 </script>
 
-<h2>{tes()}</h2>
-
-<h2>{newStore.getCounter()}</h2>
+<h2>{tes.get().counter}</h2>

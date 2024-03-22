@@ -22,7 +22,7 @@ export function get<T, U extends any>(store: PrimitiveStore<T>, derivation: (sta
 	return derivation.bind(null, store.value);
 }
 
-type Updater<T> = (payload: T) => void;
+type Updater<T = undefined> = (payload: T) => void;
 /**
  * The function `update` takes a store, a mutator function, and a payload, and updates the store's
  * value using the mutator function while handling caching if applicable.

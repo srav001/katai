@@ -1,7 +1,8 @@
+import { unstate } from 'svelte';
 import { createStore, type StoreOptions } from '../store/core.svelte.js';
 import { clearCache, get, subscribe, update } from '../store/primitives.svelte.js';
 
-// BASED BY SVELTE WRITABLE STORE
+// BASED ON SVELTE WRITABLE STORE
 
 /**
  * The `createWritable` function creates a writable store with initial value and provides
@@ -33,14 +34,18 @@ export function createWritable<T extends Record<string, any>>(
 	const updater = update(store, (state, val: T) => {
 		state = val;
 	});
+
 	return {
 		get: get(store, () => store.value),
-		set: updater,
+		set: update(store, (state, val: T) => {
+			Object.assign(state, val);
+		}),
 		update: (callback: (val: T) => T) => {
 			updater(callback(store.value));
 		},
 		subscribe: (subscriber: (val: T) => void) =>
-			subscribe(store, [() => store.value], ([state]) => subscriber(state)),
-		clearCache: () => clearCache(storeName)
+			subscribe(store, [() => unstate(store.value)], ([state]) => subscriber(state)),
+		clearCache: () => clearCache(storeName),
+		store
 	};
 }
