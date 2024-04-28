@@ -1,4 +1,3 @@
-import { unstate } from 'svelte';
 import { createStore, type StoreOptions } from '../store/core.svelte.js';
 import { clearCache, get, subscribe, update } from '../store/primitives.svelte.js';
 
@@ -44,7 +43,7 @@ export function createWritable<T extends Record<string, any>>(
 			updater(callback(store.value));
 		},
 		subscribe: (subscriber: (val: T) => void) =>
-			subscribe(store, [() => unstate(store.value)], ([state]) => subscriber(state)),
+			subscribe(store, [() => $state.snapshot(store.value)], ([state]) => subscriber(state)),
 		clearCache: () => clearCache(storeName),
 		store
 	};

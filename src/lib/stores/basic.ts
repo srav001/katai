@@ -12,8 +12,8 @@ export type Actions<T> = Record<string, Action<T>>;
 
 export type Store<S extends State, G extends Getters<S>, A extends Actions<S>> = {
 	state: S;
-	getters: G;
-	actions: A;
+	getters?: G;
+	actions?: A;
 };
 
 export type StoreWithGettersAndActions<S extends State, G extends Getters<S>, A extends Actions<S>> = {
@@ -51,8 +51,10 @@ export function createBasicStore<S extends State, G extends Getters<S>, A extend
 ): BasicStore<S, G, A> {
 	const primitiveStore = createStore(storeName, options.state, settings);
 	const newStore = {} as any;
-	for (const key in options.getters) {
-		newStore[key] = get(primitiveStore, () => options.getters[key](primitiveStore.value));
+	if (options.getters !== undefined) {
+		for (const key in options.getters) {
+			newStore[key] = get(primitiveStore, () => options.getters![key](primitiveStore.value));
+		}
 	}
 	for (const key in options.actions) {
 		newStore[key] = update(primitiveStore, options.actions[key]);

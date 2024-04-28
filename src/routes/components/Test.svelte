@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createWritable } from '$lib/stores/writable.js';
+	import { createWritable } from '$lib/stores/writable.svelte.js';
 
 	const tes = createWritable({
 		counter: 1
@@ -7,18 +7,17 @@
 
 	tes.set({ counter: 101 });
 
-	console.log('writable store - ', tes.get().counter);
-
 	setInterval(() => {
+		// console.clear();
 		console.log('\nincremented');
 		tes.update((state) => {
 			state.counter += 1;
 			return state;
 		});
-	}, 1000);
+	}, 2000);
 
 	tes.subscribe((state) => {
-		console.log('writable store');
+		console.log('writable store', state);
 	});
 </script>
 

@@ -1,7 +1,6 @@
 import type { PrimitiveStore } from '$lib/types/store.js';
 import { onDestroy } from 'svelte';
 
-const effectToSubMap = new WeakMap<WeakKey, WeakSet<any>>();
 let cacheModule: typeof import('./cache.js');
 
 type Getter<T> = () => T;
@@ -75,8 +74,6 @@ export function subscribe<T, U extends Subscribers<T>>(
 	subscribers: [...U],
 	effect: (states: MapSources<U, T>) => void
 ): () => void {
-	effectToSubMap.set(subscribers, new WeakSet().add(effect));
-
 	const effectToDestroy = $effect.root(() => {
 		$effect(() => {
 			const states = [] as MapSources<U, T>;
@@ -87,22 +84,18 @@ export function subscribe<T, U extends Subscribers<T>>(
 		});
 	});
 
-	function toDestroy() {
-		effectToDestroy();
-		effectToSubMap.get(subscribers)?.delete(effect);
-	}
-
 	try {
-		onDestroy(toDestroy);
+		onDestroy(effectToDestroy);
 	} catch (err) {
-		if ((err as any).message === 'onDestroy can only be used during component initialisation.') {
-			// Handle silently
-		} else {
+		if (
+			(err as any).message &&
+			(err as any).message !== 'onDestroy can only be used during component initialisation.'
+		) {
 			throw err;
 		}
 	}
 
-	return toDestroy;
+	return effectToDestroy;
 }
 
 /**

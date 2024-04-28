@@ -1,8 +1,8 @@
-// TODO: Add impl of vitual /* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable @typescript-eslint/ban-types */
 import { handleCacheOfStore } from '$lib/store/cache.js';
 import type { StoreOptions } from '$lib/store/core.svelte.js';
 import { createStore } from '$lib/store/core.svelte.js';
-import { onDestroy, unstate } from 'svelte';
+import { onDestroy } from 'svelte';
 import type {
 	DeepReadonly,
 	GenericArray,
@@ -102,7 +102,6 @@ function storeInstance<InferedState extends Record<string, any>>(
 		unsubscribe,
 		removeSubscribers,
 		clearCache
-		// dropStore
 	};
 
 	function getKey(key?: string) {
@@ -131,7 +130,7 @@ function storeInstance<InferedState extends Record<string, any>>(
 	>(key: U, mutator: (state: T) => T) {
 		key = getKey(key) as U;
 		let newState = getNestedValue(primitiveStore.value, key);
-		const _oldData = unstate(newState);
+		const _oldData = $state.snapshot(newState);
 		newState = mutator(newState as T);
 
 		setNestedValue(primitiveStore.value, key, newState);

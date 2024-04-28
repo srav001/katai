@@ -10,4 +10,5 @@
 			<Test />
 		{/if}
 	</article>
+	<button onclick={() => (show = !show)}>Toggle</button>
 </main>

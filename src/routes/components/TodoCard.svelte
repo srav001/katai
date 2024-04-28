@@ -2,19 +2,14 @@
 	import { type Todo, todosStore } from '../stores.js';
 
 	function removeTodo(id: number) {
-		todosStore.update('todos', (todos) => {
-			for (const todo of todos) {
-				if (todo.id === id) {
-					todo.status = 'completed';
-				}
-			}
-			return todos;
-		});
+		todosStore.toggleTodo(id);
 	}
 
-	let { todo } = $props<{
+	let {
+		todo
+	}: {
 		todo: Todo;
-	}>();
+	} = $props();
 </script>
 
 <article>
