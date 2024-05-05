@@ -1,3 +1,6 @@
+import type { PrimitiveStore } from '$lib/types/store.js';
+import { subscribe } from './primitives.svelte.js';
+
 const CACHE_KEY = 'katai-';
 export type CacheOptons = {
 	adapter: {
@@ -6,6 +9,7 @@ export type CacheOptons = {
 		deleteFromCache: (key: string) => void;
 	};
 	key?: string;
+	deep?: boolean;
 };
 
 // eslint-disable-next-line sonarjs/no-unused-collection
@@ -44,7 +48,22 @@ export function getCacheKey(storeName: string) {
  */
 export function handleCacheOfStore<T>(storeName: string, state: T) {
 	if (_cachedStoresMap.has(storeName)) {
-		const cacheAdapter = _cachedStoresMap.get(storeName)!.adapter;
-		cacheAdapter.setToCache(getCacheKey(storeName)!, state);
+		const cacheOptions = _cachedStoresMap.get(storeName);
+		if (!cacheOptions?.deep && cacheOptions?.adapter) {
+			cacheOptions.adapter.setToCache(getCacheKey(storeName)!, state);
+		}
 	}
+}
+
+export function cacheDeeply<T>(store: PrimitiveStore<T>): (() => void) | undefined {
+	if (_cachedStoresMap.has(store.name)) {
+		const cacheOptions = _cachedStoresMap.get(store.name);
+		if (cacheOptions?.deep === true) {
+			return subscribe(store, [() => $state.snapshot(store.value)], ([state]) =>
+				cacheOptions.adapter.setToCache(getCacheKey(store.name)!, state)
+			);
+		}
+		return undefined;
+	}
+	return undefined;
 }

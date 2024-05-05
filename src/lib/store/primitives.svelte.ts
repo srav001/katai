@@ -105,9 +105,8 @@ export function subscribe<T, U extends Subscribers<T>>(
 		onDestroy(effectToDestroy);
 	} catch (err) {
 		if (
-			(err as any).message &&
-			(err as any).message !==
-				`lifecycle_outside_component
+			(err as any)?.message !==
+			`lifecycle_outside_component
 \`onDestroy(...)\` can only be used during component initialisation`
 		) {
 			throw err;

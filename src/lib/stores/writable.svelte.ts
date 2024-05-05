@@ -42,8 +42,9 @@ export function createWritable<T extends Record<string, any>>(
 		update: (callback: (val: T) => T) => {
 			updater(callback(store.value));
 		},
-		subscribe: (subscriber: (val: T) => void) =>
-			subscribe(store, [() => $state.snapshot(store.value)], ([state]) => subscriber(state)),
+		subscribe: (subscriber: (val: T) => void) => {
+			subscribe(store, [() => $state.snapshot(store.value)], ([state]) => subscriber(state));
+		},
 		clearCache: () => clearCache(storeName),
 		store
 	};
