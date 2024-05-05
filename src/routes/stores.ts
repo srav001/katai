@@ -37,3 +37,5 @@ export const todosStore = createBasicStore(
 		}
 	}
 );
+
+todosStore.getTodos();

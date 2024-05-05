@@ -18,6 +18,23 @@ type Getter<T> = () => T;
  * `store.value`.
  */
 export function get<T, U extends any>(store: PrimitiveStore<T>, derivation: (state: T) => U): Getter<U> {
+	// 	let value: U;
+	// 	const effectToDestroy = $effect.root(() => {
+	// 		$effect.pre(() => {
+	// 			value = derivation(store.value);
+	// 		});
+	// 	});
+	// 	try {
+	// 		onDestroy(effectToDestroy);
+	// 	} catch (err) {
+	// 		if (
+	// 			err.message !==
+	// 			`lifecycle_outside_component
+	// \`onDestroy(...)\` can only be used during component initialisation`
+	// 		)
+	// 			console.log(err.message);
+	// 	}
+	// 	return () => value;
 	return derivation.bind(null, store.value);
 }
 
@@ -89,7 +106,9 @@ export function subscribe<T, U extends Subscribers<T>>(
 	} catch (err) {
 		if (
 			(err as any).message &&
-			(err as any).message !== 'onDestroy can only be used during component initialisation.'
+			(err as any).message !==
+				`lifecycle_outside_component
+\`onDestroy(...)\` can only be used during component initialisation`
 		) {
 			throw err;
 		}

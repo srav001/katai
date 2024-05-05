@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { createWritable } from '$lib/stores/writable.svelte.js';
+	import { todosStore } from '../stores.js';
 
 	const tes = createWritable({
 		counter: 1
@@ -19,6 +20,8 @@
 	tes.subscribe((state) => {
 		console.log('writable store', state);
 	});
+
+	console.log(todosStore);
 </script>
 
 <h2>{tes.get().counter}</h2>
