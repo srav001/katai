@@ -81,7 +81,7 @@ function createState<T>(storeName: string, storeState: T, options?: StoreOptions
  * to customize the behavior of the store creation process like adding cache adapters.
  * @returns A PrimitiveStore object with the store name and a getter function for the store value.
  */
-export function createStore<InferedState>(
+export function createStorePrimitive<InferedState>(
 	storeName: string,
 	storeState: InferedState,
 	options?: StoreOptions

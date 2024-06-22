@@ -1,6 +1,6 @@
 import type { StoreOptions } from '$lib/store/core.svelte.js';
-import { clearCache, get, subscribe, update, type MapSources, type Subscribers } from '$lib/store/primitives.svelte.js';
-import { createStore } from '../store/core.svelte.js';
+import { clearCache, get, update, watch, type MapSources, type Watchers } from '$lib/store/primitives.svelte.js';
+import { createStorePrimitive } from '../store/core.svelte.js';
 
 export type State = Record<string | number, any>;
 
@@ -24,10 +24,7 @@ export type StoreWithGettersAndActions<S extends State, G extends Getters<S>, A 
 
 type BasicStore<S extends State, G extends Getters<S>, A extends Actions<S>> = StoreWithGettersAndActions<S, G, A> & {
 	clearCache: () => void;
-	subscribe: <Sub extends Subscribers<S>>(
-		subscribers: Sub,
-		effect: (states: MapSources<Sub, S>) => void
-	) => () => void;
+	subscribe: <Sub extends Watchers<S>>(subscribers: Sub, effect: (states: MapSources<Sub, S>) => void) => () => void;
 };
 
 /**
@@ -44,12 +41,12 @@ type BasicStore<S extends State, G extends Getters<S>, A extends Actions<S>> = S
  * @returns The `createBasicStore` function returns an object of type `BasicStore<S, G, A>`, which
  * includes the state, getters, actions, and additional methods like `clearCache` and `subscribe`.
  */
-export function createBasicStore<S extends State, G extends Getters<S>, A extends Actions<S>>(
+export function createStore<S extends State, G extends Getters<S>, A extends Actions<S>>(
 	storeName: string,
 	options: Store<S, G, A>,
 	settings?: StoreOptions
 ): BasicStore<S, G, A> {
-	const primitiveStore = createStore(storeName, options.state, settings);
+	const primitiveStore = createStorePrimitive(storeName, options.state, settings);
 	const newStore = {} as any;
 	if (options.getters !== undefined) {
 		for (const key in options.getters) {
@@ -62,7 +59,7 @@ export function createBasicStore<S extends State, G extends Getters<S>, A extend
 
 	newStore.clearCache = () => clearCache(storeName);
 	newStore.subscribe = (subscribers: any, effect: (states: any) => () => void) =>
-		subscribe(primitiveStore, subscribers, effect);
+		watch(primitiveStore, subscribers, effect);
 
 	return newStore;
 }

@@ -1,5 +1,5 @@
 import type { PrimitiveStore } from '$lib/types/store.js';
-import { subscribe } from './primitives.svelte.js';
+import { watch } from './primitives.svelte.js';
 
 const CACHE_KEY = 'katai-';
 export type CacheOptons = {
@@ -59,7 +59,7 @@ export function cacheDeeply<T>(store: PrimitiveStore<T>): (() => void) | undefin
 	if (_cachedStoresMap.has(store.name)) {
 		const cacheOptions = _cachedStoresMap.get(store.name);
 		if (cacheOptions?.deep === true) {
-			return subscribe(store, [() => $state.snapshot(store.value)], ([state]) =>
+			return watch(store, [() => $state.snapshot(store.value)], ([state]) =>
 				cacheOptions.adapter.setToCache(getCacheKey(store.name)!, state)
 			);
 		}

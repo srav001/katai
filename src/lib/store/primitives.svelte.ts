@@ -1,4 +1,5 @@
 import type { PrimitiveStore } from '$lib/types/store.js';
+import memoize from 'sonic-memoize';
 import { onDestroy } from 'svelte';
 
 let cacheModule: typeof import('./cache.js');
@@ -10,32 +11,51 @@ type Getter<T> = () => T;
  * @param store - `PrimitiveStore<T>` is a generic type representing a store that holds a value of type
  * `T`. It seems like the `store` parameter is expected to be an instance of this `PrimitiveStore`
  * type.
- * @param derivation - The `derivation` parameter is a function that takes the current state of type
+ * @param getFn - The `derivation` parameter is a function that takes the current state of type
  * `T` as input and returns a value of type `U`. It is used to derive a new value based on the current
  * state stored in the `PrimitiveStore`.
  * @returns A `Getter<U>` function is being returned. This function takes no arguments and returns a
  * value of type `U`. The value returned is the result of applying the `derivation` function to the
  * `store.value`.
  */
-export function get<T, U extends any>(store: PrimitiveStore<T>, derivation: (state: T) => U): Getter<U> {
-	// 	let value: U;
-	// 	const effectToDestroy = $effect.root(() => {
-	// 		$effect.pre(() => {
-	// 			value = derivation(store.value);
-	// 		});
-	// 	});
-	// 	try {
-	// 		onDestroy(effectToDestroy);
-	// 	} catch (err) {
-	// 		if (
-	// 			err.message !==
-	// 			`lifecycle_outside_component
-	// \`onDestroy(...)\` can only be used during component initialisation`
-	// 		)
-	// 			console.log(err.message);
-	// 	}
-	// 	return () => value;
-	return derivation.bind(null, store.value);
+export function get<T, U extends any>(store: PrimitiveStore<T>, getFn: (state: T) => U): Getter<U> {
+	return getFn.bind(null, store.value);
+}
+
+/**
+ * The `computed` function takes a store and a computation function, and returns a computed
+ * value that is derived from the store's value.
+ * @param store - `PrimitiveStore<T>` is a generic type representing a store that holds a value of type
+ * `T`. It seems like the `store` parameter is expected to be an instance of this `PrimitiveStore`
+ * type.
+ * @param computation - The `computation` parameter is a function that takes the current state of type
+ * `T` as input and returns a value of type `U`. It is used to derive a new value based on the current
+ * state stored in the `PrimitiveStore`.
+ * @returns A `Computed<U>` object is being returned. This object has a `get $value()` method that
+ * returns the computed value. The `get $value()` method is a getter function that applies the
+ * computation function to the store's value.
+ */
+export function computed<T, U extends any>(store: PrimitiveStore<T>, computation: (state: T) => U) {
+	let state = $state() as U;
+
+	const effectToDestroy = $effect.root(() => {
+		const memo = (memoize as any)(computation);
+
+		$effect.pre(() => {
+			const value = memo(store.value);
+			if (state !== value) {
+				state = value;
+			}
+		});
+	});
+	try {
+		onDestroy(effectToDestroy);
+	} catch (err) {}
+	return {
+		get $value() {
+			return state;
+		}
+	};
 }
 
 type Updater<T = undefined> = (payload: T) => void;
@@ -68,25 +88,25 @@ export function update<T, U extends any, C extends any = unknown>(
 	};
 }
 
-type Subscriber<T, U = unknown> = (state: T) => U;
-export type Subscribers<T> = Subscriber<T, unknown>[];
+type Watcher<T, U = unknown> = (state: T) => U;
+export type Watchers<T> = Watcher<T, unknown>[];
 export type MapSources<T, U> = {
-	[K in keyof T]: T[K] extends Subscriber<U, infer V> ? V : T[K] extends object ? T[K] : never;
+	[K in keyof T]: T[K] extends Watcher<U, infer V> ? V : T[K] extends object ? T[K] : never;
 };
 /**
- * The `subscribe` function allows for subscribing to a primitive store with specified
- * subscribers and an effect to be executed.
+ * The `watch` function allows for watching to a primitive store with specified
+ * watchers and an effect to be executed.
  * @param store - The `store` parameter is a PrimitiveStore that holds the state of type T.
- * @param subscribers - Subscribers are functions that subscribe to changes in the store's state. They
+ * @param watchers - Watchers are functions that watche to changes in the store's state. They
  * are typically used to extract specific pieces of state from the store and react to changes in those
  * pieces of state.
- * @param effect - The `effect` parameter in the `subscribe` function is a function that takes a
+ * @param effect - The `effect` parameter in the `watche` function is a function that takes a
  * `MapSources` object as its argument and performs some action based on the states provided in the
  * `MapSources` object.
- * @returns The `subscribe` function returns a cleanup function that can be used to unsubscribe the
- * effect and remove it from the list of subscribers.
+ * @returns The `watch` function returns a cleanup function that can be used to unwatch the
+ * effect and remove it from the list of watchers.
  */
-export function subscribe<T, U extends Subscribers<T>>(
+export function watch<T, U extends Watchers<T>>(
 	store: PrimitiveStore<T>,
 	subscribers: [...U],
 	effect: (states: MapSources<U, T>) => void

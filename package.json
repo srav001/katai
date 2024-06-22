@@ -42,14 +42,10 @@
 		"dist"
 	],
 	"peerDependencies": {
-		"svelte": ">=5.0.0",
-		"idb-keyval": "^6.2.1"
+		"idb-keyval": "^6.2.1",
+		"svelte": ">=5.0.0"
 	},
 	"devDependencies": {
-		"eslint-compat-utils": "^0.1.2",
-		"eslint-scope": "^7.2.2",
-		"eslint-visitor-keys": "^3.4.3",
-		"svelte-eslint-parser": "^0.33.1",
 		"@sveltejs/adapter-static": "^3.0.1",
 		"@sveltejs/kit": "^2.5.0",
 		"@sveltejs/package": "^2.2.6",
@@ -59,23 +55,29 @@
 		"@typescript-eslint/eslint-plugin": "^6.0.0",
 		"@typescript-eslint/parser": "^6.0.0",
 		"eslint": "^8.28.0",
+		"eslint-compat-utils": "^0.1.2",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-sonarjs": "^0.23.0",
 		"eslint-plugin-svelte": "^2.30.0",
+		"eslint-scope": "^7.2.2",
+		"eslint-visitor-keys": "^3.4.3",
 		"idb-keyval": "^6.2.1",
 		"prettier": "^3.1.1",
 		"prettier-plugin-organize-imports": "^3.2.4",
 		"prettier-plugin-svelte": "^3.1.2",
 		"publint": "^0.2.7",
-		"svelte": "^5.0.0-next.123",
+		"svelte": "^5.0.0-next.164",
 		"svelte-check": "^3.6.0",
+		"svelte-eslint-parser": "^0.33.1",
 		"tslib": "^2.6.2",
 		"typescript": "^5.3.3",
 		"vite": "^5.1.4",
 		"vitest": "^1.0.0"
 	},
 	"description": "Katai (meaning store in Tamil) is a simple state manager for Svelte 5",
-	"dependencies": {},
+	"dependencies": {
+		"sonic-memoize": "^1.1.3"
+	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/srav001/katai.git"

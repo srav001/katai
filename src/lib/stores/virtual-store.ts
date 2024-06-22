@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { handleCacheOfStore } from '$lib/store/cache.js';
 import type { StoreOptions } from '$lib/store/core.svelte.js';
-import { createStore } from '$lib/store/core.svelte.js';
+import { createStorePrimitive } from '$lib/store/core.svelte.js';
 import { onDestroy } from 'svelte';
 import type {
 	DeepReadonly,
@@ -88,7 +88,7 @@ function storeInstance<InferedState extends Record<string, any>>(
 	storeName: string,
 	options?: StoreOptions
 ) {
-	const primitiveStore = createStore(storeName, state, options);
+	const primitiveStore = createStorePrimitive(storeName, state, options);
 
 	const storeObj = {
 		get $value() {

@@ -1,5 +1,5 @@
 import { localStorageAdapter } from '$lib/cache-adapters/index.js';
-import { createBasicStore } from '$lib/stores/basic.js';
+import { createStore } from '$lib/stores/basic.js';
 
 export type Todo = {
 	id: number;
@@ -7,7 +7,7 @@ export type Todo = {
 	status: 'completed' | 'active';
 };
 
-export const todosStore = createBasicStore(
+export const todosStore = createStore(
 	'todos',
 	{
 		state: {

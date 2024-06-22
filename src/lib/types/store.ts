@@ -10,5 +10,5 @@ export type BasicStore<T = TypesOfState> = {
 
 export type PrimitiveStore<T> = {
 	name: string;
-	value: T;
+	value: Readonly<T>;
 };
