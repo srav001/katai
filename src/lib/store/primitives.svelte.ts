@@ -1,5 +1,4 @@
 import type { PrimitiveStore } from '$lib/types/store.js';
-import memoize from 'sonic-memoize';
 import { onDestroy } from 'svelte';
 
 let cacheModule: typeof import('./cache.js');
@@ -19,9 +18,12 @@ type Getter<T> = () => T;
  * `store.value`.
  */
 export function get<T, U extends any>(store: PrimitiveStore<T>, getFn: (state: T) => U): Getter<U> {
-	return getFn.bind(null, store.value);
+	return () => $state.snapshot(getFn(store.value));
 }
 
+type Computed<T> = {
+	$value: Readonly<T>;
+};
 /**
  * The `computed` function takes a store and a computation function, and returns a computed
  * value that is derived from the store's value.
@@ -35,22 +37,22 @@ export function get<T, U extends any>(store: PrimitiveStore<T>, getFn: (state: T
  * returns the computed value. The `get $value()` method is a getter function that applies the
  * computation function to the store's value.
  */
-export function computed<T, U extends any>(store: PrimitiveStore<T>, computation: (state: T) => U) {
+export function computed<T, U extends any>(store: PrimitiveStore<T>, computation: (state: T) => U): Computed<U> {
 	let state = $state() as U;
 
 	const effectToDestroy = $effect.root(() => {
-		const memo = (memoize as any)(computation);
-
 		$effect.pre(() => {
-			const value = memo(store.value);
-			if (state !== value) {
+			const value = computation(store.value);
+			if ($state.is(state, value) === false) {
 				state = value;
 			}
 		});
 	});
+
 	try {
 		onDestroy(effectToDestroy);
 	} catch (err) {}
+
 	return {
 		get $value() {
 			return state;

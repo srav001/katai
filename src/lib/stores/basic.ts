@@ -1,28 +1,56 @@
 import type { StoreOptions } from '$lib/store/core.svelte.js';
-import { clearCache, get, update, watch, type MapSources, type Watchers } from '$lib/store/primitives.svelte.js';
+import {
+	clearCache,
+	computed,
+	get,
+	update,
+	watch,
+	type MapSources,
+	type Watchers
+} from '$lib/store/primitives.svelte.js';
+import type { DeepReadonly } from '$lib/types/utilities.js';
 import { createStorePrimitive } from '../store/core.svelte.js';
 
 export type State = Record<string | number, any>;
 
-type Getter<T> = (state: T) => any;
-export type Getters<T> = Record<string, Getter<T>>;
-
 type Action<T> = (state: T, payload: any) => void;
 export type Actions<T> = Record<string, Action<T>>;
 
-export type Store<S extends State, G extends Getters<S>, A extends Actions<S>> = {
+type GetValue<T> = (state: T) => any;
+
+export type Getters<T> = Record<string, GetValue<T>>;
+export type Computeds<T> = Record<string, GetValue<T>>;
+
+export type Store<S extends State, G extends Getters<S>, A extends Actions<S>, C extends Computeds<S>> = {
 	state: S;
 	getters?: G;
+	computeds?: C;
 	actions?: A;
 };
 
-export type StoreWithGettersAndActions<S extends State, G extends Getters<S>, A extends Actions<S>> = {
+export type StoreWithGettersAndActions<
+	S extends State,
+	G extends Getters<S>,
+	A extends Actions<S>,
+	C extends Computeds<S>
+> = {
 	[K in keyof G]: G[K] extends (state: any) => infer R ? () => R : never;
 } & {
 	[K in keyof A]: A[K] extends (state: any, payload: infer P) => void ? (payload: P) => void : never;
+} & {
+	[K in keyof C]: C[K] extends (state: any) => infer R
+		? DeepReadonly<{
+				$value: R;
+			}>
+		: never;
 };
 
-type BasicStore<S extends State, G extends Getters<S>, A extends Actions<S>> = StoreWithGettersAndActions<S, G, A> & {
+type BasicStore<
+	S extends State,
+	G extends Getters<S>,
+	A extends Actions<S>,
+	C extends Computeds<S>
+> = StoreWithGettersAndActions<S, G, A, C> & {
 	clearCache: () => void;
 	subscribe: <Sub extends Watchers<S>>(subscribers: Sub, effect: (states: MapSources<Sub, S>) => void) => () => void;
 };
@@ -41,23 +69,31 @@ type BasicStore<S extends State, G extends Getters<S>, A extends Actions<S>> = S
  * @returns The `createBasicStore` function returns an object of type `BasicStore<S, G, A>`, which
  * includes the state, getters, actions, and additional methods like `clearCache` and `subscribe`.
  */
-export function createStore<S extends State, G extends Getters<S>, A extends Actions<S>>(
+export function createStore<S extends State, G extends Getters<S>, A extends Actions<S>, C extends Computeds<S>>(
 	storeName: string,
-	options: Store<S, G, A>,
+	options: Store<S, G, A, C>,
 	settings?: StoreOptions
-): BasicStore<S, G, A> {
+): BasicStore<S, G, A, C> {
 	const primitiveStore = createStorePrimitive(storeName, options.state, settings);
 	const newStore = {} as any;
+
 	if (options.getters !== undefined) {
 		for (const key in options.getters) {
-			newStore[key] = get(primitiveStore, () => options.getters![key](primitiveStore.value));
+			newStore[key] = get(primitiveStore, options.getters![key]);
 		}
 	}
-	for (const key in options.actions) {
-		newStore[key] = update(primitiveStore, options.actions[key]);
+	if (options.computeds !== undefined) {
+		for (const key in options.computeds) {
+			newStore[key] = computed(primitiveStore, options.computeds![key]);
+		}
+	}
+	if (options.actions !== undefined) {
+		for (const key in options.actions) {
+			newStore[key] = update(primitiveStore, options.actions[key]);
+		}
 	}
 
-	newStore.clearCache = () => clearCache(storeName);
+	newStore.clearCache = clearCache.bind(null, storeName);
 	newStore.subscribe = (subscribers: any, effect: (states: any) => () => void) =>
 		watch(primitiveStore, subscribers, effect);
 
