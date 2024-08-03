@@ -51,7 +51,15 @@ export function computed<T, U extends any>(store: PrimitiveStore<T>, computation
 
 	try {
 		onDestroy(effectToDestroy);
-	} catch (err) {}
+	} catch (err) {
+		if (
+			(err as any)?.message !==
+			`lifecycle_outside_component
+\`onDestroy(...)\` can only be used during component initialisation`
+		) {
+			throw err;
+		}
+	}
 
 	return {
 		get $value() {
@@ -111,16 +119,23 @@ export type MapSources<T, U> = {
 export function watch<T, U extends Watchers<T>>(
 	store: PrimitiveStore<T>,
 	subscribers: [...U],
-	effect: (states: MapSources<U, T>) => void
+	effect: (states: MapSources<U, T>) => void | (() => void)
 ): () => void {
 	const effectToDestroy = $effect.root(() => {
+		let cleanUp: void | (() => void);
 		$effect(() => {
 			const states = [] as MapSources<U, T>;
 			for (const stateFn of subscribers) {
 				states.push(stateFn(store.value));
 			}
-			effect(states);
+			cleanUp = effect(states);
 		});
+
+		return () => {
+			if (cleanUp) {
+				cleanUp();
+			}
+		};
 	});
 
 	try {

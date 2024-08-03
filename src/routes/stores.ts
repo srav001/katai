@@ -7,19 +7,22 @@ export type Todo = {
 	status: 'completed' | 'active';
 };
 
-export const todosStore = createStore(
+export const todosStore = createStore<{
+	todos: Todo[];
+	index: number;
+}>(
 	'todos',
 	{
-		state: {
-			todos: [
-				{
-					id: crypto.randomUUID(),
-					title: 'test',
-					status: 'active'
-				}
-			] as Todo[],
-			index: 0
-		},
+		todos: [
+			{
+				id: crypto.randomUUID(),
+				title: 'test',
+				status: 'active'
+			}
+		],
+		index: 0
+	},
+	{
 		getters: {
 			getTodos: (state) => state.todos,
 			getIndex: (state) => state.index

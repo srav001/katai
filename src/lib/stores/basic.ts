@@ -22,7 +22,6 @@ export type Getters<T> = Record<string, GetValue<T>>;
 export type Computeds<T> = Record<string, GetValue<T>>;
 
 export type Store<S extends State, G extends Getters<S>, A extends Actions<S>, C extends Computeds<S>> = {
-	state: S;
 	getters?: G;
 	computeds?: C;
 	actions?: A;
@@ -69,12 +68,13 @@ type BasicStore<
  * @returns The `createBasicStore` function returns an object of type `BasicStore<S, G, A>`, which
  * includes the state, getters, actions, and additional methods like `clearCache` and `subscribe`.
  */
-export function createStore<S extends State, G extends Getters<S>, A extends Actions<S>, C extends Computeds<S>>(
-	storeName: string,
-	options: Store<S, G, A, C>,
-	settings?: StoreOptions
-): BasicStore<S, G, A, C> {
-	const primitiveStore = createStorePrimitive(storeName, options.state, settings);
+export function createStore<
+	S extends State,
+	G extends Getters<S> = Getters<S>,
+	A extends Actions<S> = Actions<S>,
+	C extends Computeds<S> = Computeds<S>
+>(storeName: string, state: S, options: Store<S, G, A, C>, settings?: StoreOptions): BasicStore<S, G, A, C> {
+	const primitiveStore = createStorePrimitive(storeName, state, settings);
 	const newStore = {} as any;
 
 	if (options.getters !== undefined) {
