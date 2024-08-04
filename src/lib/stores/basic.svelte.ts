@@ -181,9 +181,9 @@ export function createStore<
 	const deriveds = new WeakSet();
 	if (options.deriveds !== undefined) {
 		for (const key in options.deriveds) {
-			const derived = exp_derived(ps, options.deriveds![key]);
-			ns[key] = derived[0];
-			deriveds.add(derived[1]);
+			const [val, eff] = exp_derived(ps, options.deriveds![key]);
+			ns[key] = val;
+			deriveds.add(eff);
 		}
 	}
 
