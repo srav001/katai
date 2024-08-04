@@ -2,23 +2,24 @@ import { idbAdapter } from '$lib/cache-adapters/index.js';
 import { createStore } from '$lib/stores/basic.js';
 
 export type Todo = {
-	id: string;
+	id: ReturnType<typeof crypto.randomUUID>;
 	title: string;
 	status: 'completed' | 'active';
 };
 
+type State = {
+	todos: Todo[];
+	index: number;
+};
+
+const getNewState = (): State => ({
+	todos: [],
+	index: 0
+});
+
 export const todosStore = createStore(
 	'todos',
-	{
-		todos: [
-			{
-				id: crypto.randomUUID(),
-				title: 'test',
-				status: 'active'
-			}
-		] as Todo[],
-		index: 0
-	},
+	getNewState(),
 	{
 		getters: {
 			getTodos: (state) => state.todos,
@@ -43,6 +44,9 @@ export const todosStore = createStore(
 			},
 			increment(state) {
 				state.index++;
+			},
+			reset(s) {
+				s = getNewState();
 			}
 		}
 	},
