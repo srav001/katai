@@ -1,5 +1,6 @@
 import type { PrimitiveStore } from '$lib/types/store.js';
 import { onDestroy } from 'svelte';
+import { derived, sourceGet } from './svelte-internal/client.js';
 
 let cacheModule: typeof import('./cache.js');
 
@@ -177,4 +178,24 @@ export function clearCache(storeName: string): void {
 			}
 		});
 	}
+}
+
+/**
+ * This is only a experimental implementation to see use deriveds outside components
+ * Won't be mostly kept as it uses svelte internals and it is not recommended
+ */
+export function exp_derived<T, U>(store: PrimitiveStore<T>, derivation: (state: T) => U): [Computed<U>, () => void] {
+	let state = {} as Computed<U>;
+	const derivedEffect = $effect.root(() => {
+		const derive = derived(() => derivation(store.$value));
+		$effect.pre(() => {
+			state = {
+				get $value() {
+					return sourceGet(derive);
+				}
+			};
+		});
+	});
+
+	return [state, derivedEffect];
 }

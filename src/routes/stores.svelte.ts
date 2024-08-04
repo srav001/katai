@@ -1,8 +1,10 @@
 import { localStorageAdapter } from '$lib/cache-adapters/index.js';
-import { createStore } from '$lib/stores/basic.js';
+import { createStore } from '$lib/stores/index.js';
+
+export type Todo_id = ReturnType<typeof crypto.randomUUID>;
 
 export type Todo = {
-	id: ReturnType<typeof crypto.randomUUID>;
+	id: Todo_id;
 	title: string;
 	status: 'completed' | 'active';
 };
@@ -34,7 +36,7 @@ const samplePromise = () =>
 							status: 'active'
 						}
 					],
-					index: Date.now()
+					index: 2
 				}),
 			5000
 		)
@@ -45,24 +47,33 @@ export const todosStore = createStore(
 	getNewState(),
 	{
 		getters: {
+			get: (s) => s,
 			getTodos: (state) => state.todos,
-			getIndex: (state, i: number) => state.index + i
+			getIndex: (state) => state.index
 		},
 		computeds: {
-			res: (state) => state.todos[state.index]
+			res1: (state) => {
+				return state.index === 0 ? state.todos[0]?.id : state.todos[state.index - 1]?.id;
+			}
+		},
+		deriveds: {
+			res2: (state) => {
+				return state.index === 0 ? state.todos[0]?.id : state.todos[state.index - 1]?.id;
+			}
 		},
 		query: {
-			loader: samplePromise
+			loader: {
+				fn: samplePromise
+			}
 		},
 		actions: {
 			addTodo(state, todo: Todo) {
-				console.log('add todo');
 				state.todos.push(todo);
 			},
-			removeTodo(state, id: ReturnType<typeof crypto.randomUUID>) {
+			removeTodo(state, id: Todo_id) {
 				state.todos = state.todos.filter((todo) => todo.id !== id);
 			},
-			toggleTodo(state, id: ReturnType<typeof crypto.randomUUID>) {
+			toggleTodo(state, id: Todo_id) {
 				const todo = state.todos.find((todo) => todo.id === id);
 				if (todo) {
 					todo.status = todo.status === 'completed' ? 'active' : 'completed';
@@ -70,9 +81,6 @@ export const todosStore = createStore(
 			},
 			increment(state) {
 				state.index++;
-			},
-			reset(s) {
-				s = getNewState();
 			}
 		}
 	},

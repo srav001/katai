@@ -43,7 +43,7 @@ function handleCacheOfNewStore<T>(storeName: string, storeState: T, options: Sto
 
 export function storeSetter<T extends CoreState>(storeName: string, storeState: T) {
 	const store = _storesMap.get(storeName);
-	if (store) {
+	if (store !== undefined) {
 		_storesMap.get(storeName)!.value = storeState;
 		if (store.hasCache === true) {
 			if (cacheModule) {

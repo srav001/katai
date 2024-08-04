@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type Todo, todosStore } from '../stores.js';
+	import { type Todo, todosStore } from '../stores.svelte.js';
 
 	function removeTodo(id: ReturnType<typeof crypto.randomUUID>) {
 		todosStore.toggleTodo(id);
