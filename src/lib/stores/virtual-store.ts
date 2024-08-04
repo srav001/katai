@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { handleCacheOfStore } from '$lib/store/cache.js';
-import type { StoreOptions } from '$lib/store/core.svelte.js';
+import type { StoreSettings } from '$lib/store/core.svelte.js';
 import { createStorePrimitive } from '$lib/store/core.svelte.js';
 import { onDestroy } from 'svelte';
 import type {
@@ -86,7 +86,7 @@ type GetStoreValueIfNotEmpty<State, Key, T> = State extends undefined
 function storeInstance<InferedState extends Record<string, any>>(
 	state: InferedState,
 	storeName: string,
-	options?: StoreOptions
+	options?: StoreSettings
 ) {
 	const primitiveStore = createStorePrimitive(storeName, state, options);
 
@@ -243,7 +243,7 @@ function storeInstance<InferedState extends Record<string, any>>(
 export function createVirtualStore<T extends Record<string, any>>(
 	store: T,
 	storeName = Math.random().toString(36).substring(2, 15),
-	options?: StoreOptions
+	options?: StoreSettings
 ) {
 	return storeInstance(store, storeName, options);
 }

@@ -1,4 +1,4 @@
-import { createStorePrimitive, type StoreOptions } from '../store/core.svelte.js';
+import { createStorePrimitive, type StoreSettings } from '../store/core.svelte.js';
 import { clearCache, get, update, watch } from '../store/primitives.svelte.js';
 
 // BASED ON SVELTE WRITABLE STORE
@@ -12,7 +12,7 @@ import { clearCache, get, update, watch } from '../store/primitives.svelte.js';
  * @param storeName - The `storeName` parameter is a string that represents the name of the store where
  * the data will be stored. If no `storeName` is provided, a random string will be generated for the
  * store name.
- * @param {StoreOptions} [storeOptions] - The `storeOptions` parameter in the `createWritable` function
+ * @param {StoreSettings} [storeOptions] - The `storeOptions` parameter in the `createWritable` function
  * is an optional parameter that allows you to specify additional options for the store creation. These
  * options can include configuration settings or options specific to the underlying store
  * implementation. If provided, these options will be used when creating the store using the `create
@@ -26,7 +26,7 @@ import { clearCache, get, update, watch } from '../store/primitives.svelte.js';
 export function createWritable<T extends Record<string, any>>(
 	initalValue: T,
 	storeName = Math.random().toString(36).substring(2, 15),
-	storeOptions?: StoreOptions
+	storeOptions?: StoreSettings
 ) {
 	const store = createStorePrimitive(storeName, initalValue, storeOptions);
 

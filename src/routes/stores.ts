@@ -7,10 +7,7 @@ export type Todo = {
 	status: 'completed' | 'active';
 };
 
-export const todosStore = createStore<{
-	todos: Todo[];
-	index: number;
-}>(
+export const todosStore = createStore(
 	'todos',
 	{
 		todos: [
@@ -19,13 +16,13 @@ export const todosStore = createStore<{
 				title: 'test',
 				status: 'active'
 			}
-		],
+		] as Todo[],
 		index: 0
 	},
 	{
 		getters: {
 			getTodos: (state) => state.todos,
-			getIndex: (state) => state.index
+			getIndex: (state, i: number) => state.index + i
 		},
 		computeds: {
 			res: (state) => state.todos[state.index]

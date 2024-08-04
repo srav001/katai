@@ -17,8 +17,8 @@ type Getter<T> = () => T;
  * value of type `U`. The value returned is the result of applying the `derivation` function to the
  * `store.value`.
  */
-export function get<T, U extends any>(store: PrimitiveStore<T>, getFn: (state: T) => U): Getter<U> {
-	return () => $state.snapshot(getFn(store.value));
+export function get<T, U extends any, A>(store: PrimitiveStore<T>, getFn: (state: T, ...args: A[]) => U): Getter<U> {
+	return (...args: A[]) => $state.snapshot(getFn(store.value, ...args));
 }
 
 type Computed<T> = {
@@ -68,7 +68,7 @@ export function computed<T, U extends any>(store: PrimitiveStore<T>, computation
 	};
 }
 
-type Updater<T = undefined> = (payload: T) => void;
+type Updater<T = undefined> = (...args: T[]) => void;
 /**
  * The function `update` takes a store, a mutator function, and a payload, and updates the store's
  * value using the mutator function while handling caching if applicable.
@@ -81,10 +81,10 @@ type Updater<T = undefined> = (payload: T) => void;
  */
 export function update<T, U extends any, C extends any = unknown>(
 	store: PrimitiveStore<T>,
-	mutator: (state: T, payload: C) => U
+	mutator: (state: T, ...args: C[]) => U
 ): Updater<C> {
-	return (val: C) => {
-		mutator(store.value, val);
+	return (...args: C[]) => {
+		mutator(store.value, ...args);
 		if (store.name) {
 			if (cacheModule) {
 				cacheModule.handleCacheOfStore(store.name, store.value);

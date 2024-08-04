@@ -1,4 +1,4 @@
-import type { StoreOptions } from '$lib/store/core.svelte.js';
+import type { StoreSettings } from '$lib/store/core.svelte.js';
 import {
 	clearCache,
 	computed,
@@ -13,12 +13,14 @@ import { createStorePrimitive } from '../store/core.svelte.js';
 
 export type State = Record<string | number, any>;
 
-type Action<T> = (state: T, payload: any) => void;
+type Action<T> = (state: T, ...args: any[]) => void;
 export type Actions<T> = Record<string, Action<T>>;
 
-type GetValue<T> = (state: T) => any;
+type Getter<T> = (state: T, ...args: any[]) => any;
 
-export type Getters<T> = Record<string, GetValue<T>>;
+export type Getters<T> = Record<string, Getter<T>>;
+
+type GetValue<T> = (state: T) => any;
 export type Computeds<T> = Record<string, GetValue<T>>;
 
 export type Store<S extends State, G extends Getters<S>, A extends Actions<S>, C extends Computeds<S>> = {
@@ -33,9 +35,9 @@ export type StoreWithGettersAndActions<
 	A extends Actions<S>,
 	C extends Computeds<S>
 > = {
-	[K in keyof G]: G[K] extends (state: any) => infer R ? () => R : never;
+	[K in keyof G]: G[K] extends (state: any, ...args: infer Y) => infer R ? (...args: Y) => R : never;
 } & {
-	[K in keyof A]: A[K] extends (state: any, payload: infer P) => void ? (payload: P) => void : never;
+	[K in keyof A]: A[K] extends (state: any, ...args: infer Y) => void ? (...args: Y) => void : never;
 } & {
 	[K in keyof C]: C[K] extends (state: any) => infer R
 		? DeepReadonly<{
@@ -51,7 +53,7 @@ type BasicStore<
 	C extends Computeds<S>
 > = StoreWithGettersAndActions<S, G, A, C> & {
 	clearCache: () => void;
-	subscribe: <Sub extends Watchers<S>>(subscribers: Sub, effect: (states: MapSources<Sub, S>) => void) => () => void;
+	$subscribe: <Sub extends Watchers<S>>(subscribers: Sub, effect: (states: MapSources<Sub, S>) => void) => () => void;
 };
 
 /**
@@ -61,7 +63,7 @@ type BasicStore<
  * store being created.
  * @param options - The `options` parameter in the `createBasicStore` function is an object that
  * contains the following properties:
- * @param {StoreOptions} [settings] - The `settings` parameter in the `createBasicStore` function is an
+ * @param {StoreSettings} [settings] - The `settings` parameter in the `createBasicStore` function is an
  * optional parameter of type `StoreOptions`. It allows you to provide additional settings or
  * configurations for the store creation process. These settings can include options such as the
  * store's persistence mechanism using cache adapters.
@@ -73,7 +75,7 @@ export function createStore<
 	G extends Getters<S> = Getters<S>,
 	A extends Actions<S> = Actions<S>,
 	C extends Computeds<S> = Computeds<S>
->(storeName: string, state: S, options: Store<S, G, A, C>, settings?: StoreOptions): BasicStore<S, G, A, C> {
+>(storeName: string, state: S, options: Store<S, G, A, C>, settings?: StoreSettings): BasicStore<S, G, A, C> {
 	const primitiveStore = createStorePrimitive(storeName, state, settings);
 	const newStore = {} as any;
 
@@ -94,7 +96,7 @@ export function createStore<
 	}
 
 	newStore.clearCache = clearCache.bind(null, storeName);
-	newStore.subscribe = (subscribers: any, effect: (states: any) => () => void) =>
+	newStore.$subscribe = (subscribers: any, effect: (states: any) => () => void) =>
 		watch(primitiveStore, subscribers, effect);
 
 	return newStore;
