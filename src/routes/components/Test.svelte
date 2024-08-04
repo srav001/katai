@@ -22,13 +22,13 @@
 	// 	});
 	// }, 5000);
 
-	todosStore.subscribe([(s) => s.todos], ([todos]) => {
+	todosStore.$subscribe([(s) => s.todos], ([todos]) => {
 		console.log('sub - ', $state.snapshot(todos));
 	});
 
 	$effect(() => {
 		console.log('$effect');
-		console.log(todosStore.getIndex());
+		console.log(todosStore.getIndex(1));
 		console.log({ ...todosStore.res.$value });
 		console.log(todosStore.getTodos());
 
@@ -48,4 +48,6 @@
 <button onclick={addTodo}>Add Todo</button>
 <pre>{JSON.stringify(todosStore.res.$value, null, 2)}</pre>
 
-<button onclick={todosStore.increment}>INDEX {todosStore.getIndex()}</button>
+<button onclick={todosStore.increment}>INDEX {todosStore.getIndex(1)}</button>
+
+<button onclick={todosStore.reset}>Reset</button>

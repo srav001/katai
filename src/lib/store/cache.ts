@@ -59,7 +59,7 @@ export function cacheDeeply<T>(store: PrimitiveStore<T>): (() => void) | undefin
 	if (_cachedStoresMap.has(store.name)) {
 		const cacheOptions = _cachedStoresMap.get(store.name);
 		if (cacheOptions?.deep === true) {
-			return watch(store, [() => $state.snapshot(store.value)], ([state]) =>
+			return watch(store, [() => $state.snapshot(store.$value)], ([state]) =>
 				cacheOptions.adapter.setToCache(getCacheKey(store.name)!, state)
 			);
 		}

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { type Todo, todosStore } from '../stores.js';
 
-	function removeTodo(id: number) {
+	function removeTodo(id: ReturnType<typeof crypto.randomUUID>) {
 		todosStore.toggleTodo(id);
 	}
 

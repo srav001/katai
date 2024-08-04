@@ -35,15 +35,15 @@ export function createWritable<T extends Record<string, any>>(
 	});
 
 	return {
-		get: get(store, () => store.value),
+		get: get(store, () => store.$value),
 		set: update(store, (state, val: T) => {
 			Object.assign(state, val);
 		}),
 		update: (callback: (val: T) => T) => {
-			updater(callback(store.value));
+			updater(callback(store.$value));
 		},
 		subscribe: (subscriber: (val: T) => void) => {
-			watch(store, [() => $state.snapshot(store.value)], ([state]) => subscriber(state));
+			watch(store, [() => $state.snapshot(store.$value)], ([state]) => subscriber(state));
 		},
 		clearCache: () => clearCache(storeName),
 		store

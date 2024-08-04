@@ -18,7 +18,7 @@ type Getter<T> = () => T;
  * `store.value`.
  */
 export function get<T, U extends any, A>(store: PrimitiveStore<T>, getFn: (state: T, ...args: A[]) => U): Getter<U> {
-	return (...args: A[]) => $state.snapshot(getFn(store.value, ...args));
+	return (...args: A[]) => $state.snapshot(getFn(store.$value, ...args));
 }
 
 type Computed<T> = {
@@ -42,7 +42,7 @@ export function computed<T, U extends any>(store: PrimitiveStore<T>, computation
 
 	const effectToDestroy = $effect.root(() => {
 		$effect.pre(() => {
-			const value = computation(store.value);
+			const value = computation(store.$value);
 			if ($state.is(state, value) === false) {
 				state = value;
 			}
@@ -84,14 +84,14 @@ export function update<T, U extends any, C extends any = unknown>(
 	mutator: (state: T, ...args: C[]) => U
 ): Updater<C> {
 	return (...args: C[]) => {
-		mutator(store.value, ...args);
+		mutator(store.$value, ...args);
 		if (store.name) {
 			if (cacheModule) {
-				cacheModule.handleCacheOfStore(store.name, store.value);
+				cacheModule.handleCacheOfStore(store.name, store.$value);
 			} else {
 				import('./cache.js').then((module) => {
 					cacheModule = module;
-					cacheModule.handleCacheOfStore(store.name, store.value);
+					cacheModule.handleCacheOfStore(store.name, store.$value);
 				});
 			}
 		}
@@ -126,7 +126,7 @@ export function watch<T, U extends Watchers<T>>(
 		$effect(() => {
 			const states = [] as MapSources<U, T>;
 			for (const stateFn of subscribers) {
-				states.push(stateFn(store.value));
+				states.push(stateFn(store.$value));
 			}
 			cleanUp = effect(states);
 		});

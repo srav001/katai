@@ -1,4 +1,4 @@
-import { idbAdapter } from '$lib/cache-adapters/index.js';
+import { localStorageAdapter } from '$lib/cache-adapters/index.js';
 import { createStore } from '$lib/stores/basic.js';
 
 export type Todo = {
@@ -17,6 +17,29 @@ const getNewState = (): State => ({
 	index: 0
 });
 
+const samplePromise = () =>
+	new Promise<State>((resolve) =>
+		setTimeout(
+			() =>
+				resolve({
+					todos: [
+						{
+							id: crypto.randomUUID(),
+							title: 'test - '.concat(Date.now().toString()),
+							status: 'active'
+						},
+						{
+							id: crypto.randomUUID(),
+							title: 'test - '.concat(Date.now().toString()),
+							status: 'active'
+						}
+					],
+					index: Date.now()
+				}),
+			5000
+		)
+	);
+
 export const todosStore = createStore(
 	'todos',
 	getNewState(),
@@ -27,6 +50,9 @@ export const todosStore = createStore(
 		},
 		computeds: {
 			res: (state) => state.todos[state.index]
+		},
+		query: {
+			loader: samplePromise
 		},
 		actions: {
 			addTodo(state, todo: Todo) {
@@ -52,7 +78,7 @@ export const todosStore = createStore(
 	},
 	{
 		cache: {
-			adapter: idbAdapter
+			adapter: localStorageAdapter
 		}
 	}
 );

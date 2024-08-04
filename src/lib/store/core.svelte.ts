@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import type { PrimitiveStore, StoreState } from '$lib/types/store.js';
+import type { CoreState, PrimitiveStore, StoreState } from '$lib/types/store.js';
 import type { CacheOptons } from './cache.js';
 
-const _stores: StoreState = $state({});
+const _storesMap = new Map<string, StoreState<CoreState>>();
 
 let cacheModule: typeof import('./cache.js');
 
@@ -34,11 +34,28 @@ function handleCacheOfNewStore<T>(storeName: string, storeState: T, options: Sto
 			typeof data === 'object' &&
 			((!Array.isArray(data) && Object.keys(data).length > 0) || (Array.isArray(data) && data.length > 0))
 		) {
-			_stores[storeName] = data;
+			_storesMap.get(storeName)!.value = data;
 		} else {
 			options.cache?.adapter.setToCache(cacheKey, storeState);
 		}
 	});
+}
+
+export function storeSetter<T extends CoreState>(storeName: string, storeState: T) {
+	const store = _storesMap.get(storeName);
+	if (store) {
+		_storesMap.get(storeName)!.value = storeState;
+		if (store.hasCache === true) {
+			if (cacheModule) {
+				cacheModule.handleCacheOfStore(storeName, storeState);
+			} else {
+				import('./cache.js').then((module) => {
+					cacheModule = module;
+					cacheModule.handleCacheOfStore(storeName, storeState);
+				});
+			}
+		}
+	}
 }
 
 /**
@@ -52,9 +69,14 @@ function handleCacheOfNewStore<T>(storeName: string, storeState: T, options: Sto
  * @param {StoreSettings} [options] - The `options` parameter in the `createState` function is an
  * optional object that can contain the following properties:
  */
-function createState<T>(storeName: string, storeState: T, options?: StoreSettings) {
-	_stores[storeName] = storeState;
+function createState<T extends CoreState>(storeName: string, storeState: T, options?: StoreSettings): StoreState<T> {
+	const state = $state({
+		value: storeState,
+		hasCache: false
+	});
+	_storesMap.set(storeName, state);
 	if (options?.cache?.adapter) {
+		state.hasCache = true;
 		if (cacheModule) {
 			handleCacheOfNewStore(storeName, storeState, options);
 		} else {
@@ -66,7 +88,10 @@ function createState<T>(storeName: string, storeState: T, options?: StoreSetting
 	} else if (options?.cache?.key && !options?.cache?.adapter) {
 		throw new Error(`Cache adapter is not provided for ${storeName} Store`);
 	}
+	return state;
 }
+
+3;
 
 /**
  * The function `createStore` creates a primitive store with a specified name and initial state.
@@ -81,27 +106,28 @@ function createState<T>(storeName: string, storeState: T, options?: StoreSetting
  * to customize the behavior of the store creation process like adding cache adapters.
  * @returns A PrimitiveStore object with the store name and a getter function for the store value.
  */
-export function createStorePrimitive<InferedState>(
+export function createStorePrimitive<InferedState extends CoreState>(
 	storeName: string,
 	storeState: InferedState,
 	options?: StoreSettings
 ): PrimitiveStore<InferedState> {
 	if (!storeName) {
 		throw new Error('Store name is required');
-	} else if (storeName in _stores) {
+	} else if (_storesMap.has(storeName) === true) {
 		throw new Error(`Store with name ${storeName} already exists, store names must be unique`);
 	}
 
+	let state: StoreState<InferedState>;
 	if (!storeState) {
 		throw new Error('Store value is required');
 	} else {
-		createState(storeName, storeState, options);
+		state = createState(storeName, storeState, options);
 	}
 
 	return {
 		name: storeName,
-		get value() {
-			return _stores[storeName];
+		get $value() {
+			return state.value;
 		}
 	};
 }

@@ -1,6 +1,10 @@
 import type { GenericArray, GenericObject, PrimitiveTypes } from './utilities.js';
 
-export type StoreState = Record<string, any>;
+export type CoreState = Record<string, any>;
+export type StoreState<T extends CoreState> = {
+	value: T;
+	hasCache: boolean;
+};
 
 export type TypesOfState = Record<string, PrimitiveTypes | GenericArray | GenericObject>;
 export type BasicStore<T = TypesOfState> = {
@@ -10,5 +14,5 @@ export type BasicStore<T = TypesOfState> = {
 
 export type PrimitiveStore<T> = {
 	name: string;
-	value: Readonly<T>;
+	$value: Readonly<T>;
 };
