@@ -1,20 +1,14 @@
-import { del, get, set } from 'idb-keyval/dist/index.js';
+import type { CacheAdapter } from '$lib/store/cache.svelte.js';
+import { del as d, get as g, set as s } from 'idb-keyval/dist/index.js';
 
-async function getFromCache<T>(key: string, decoder: (val: string) => any = JSON.parse) {
-	return decoder((await get(key)) ?? '{}') as T | undefined;
-}
-
-function setToCache<T>(key: string, value: T, encoder: (val: any) => string = JSON.stringify) {
-	// We need to stringify the value because idb-keyval doesn't support proxies. We could also use unstate, but stringify works well.
-	set(key, encoder(value));
-}
-
-function deleteFromCache(key: string) {
-	del(key);
-}
-
-export const idbAdapter = {
-	getFromCache,
-	setToCache,
-	deleteFromCache
+export const idbAdapter: CacheAdapter = {
+	async get(key, decoder = JSON.parse) {
+		return decoder((await g(key)) ?? '{}');
+	},
+	set(key, v, encoder = JSON.stringify) {
+		return s(key, encoder(v));
+	},
+	delete(key: string) {
+		d(key);
+	}
 };

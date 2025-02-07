@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/ban-types */
 import type { CoreState, PrimitiveStore, StoreState } from '$lib/types/store.js';
-import type { CacheOptons } from './cache.js';
+import type { CacheOptons } from './cache.svelte.js';
 
 const _storesMap = new Map<string, StoreState<CoreState>>();
 
-let cacheModule: typeof import('./cache.js');
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+let cacheModule: typeof import('./cache.svelte.js');
 
 export type StoreSettings = {
 	cache?: CacheOptons;
@@ -28,7 +28,7 @@ function handleCacheOfNewStore<T>(storeName: string, storeState: T, options: Sto
 	cacheModule.getCachedStoresMap().set(storeName, options.cache!);
 
 	const cacheKey = cacheModule.getCacheKey(storeName)!;
-	options.cache!.adapter.getFromCache(cacheKey).then((data) => {
+	options.cache!.adapter.get(cacheKey).then((data) => {
 		if (
 			data &&
 			typeof data === 'object' &&
@@ -36,7 +36,7 @@ function handleCacheOfNewStore<T>(storeName: string, storeState: T, options: Sto
 		) {
 			_storesMap.get(storeName)!.value = data;
 		} else {
-			options.cache?.adapter.setToCache(cacheKey, storeState);
+			options.cache?.adapter.set(cacheKey, storeState);
 		}
 	});
 }
@@ -49,7 +49,7 @@ export function storeSetter<T extends CoreState>(storeName: string, storeState: 
 			if (cacheModule) {
 				cacheModule.handleCacheOfStore(storeName, storeState);
 			} else {
-				import('./cache.js').then((module) => {
+				import('./cache.svelte.js').then((module) => {
 					cacheModule = module;
 					cacheModule.handleCacheOfStore(storeName, storeState);
 				});
@@ -70,17 +70,24 @@ export function storeSetter<T extends CoreState>(storeName: string, storeState: 
  * optional object that can contain the following properties:
  */
 function createState<T extends CoreState>(storeName: string, storeState: T, options?: StoreSettings): StoreState<T> {
-	const state = $state({
-		value: storeState,
+	// eslint-disable-next-line prefer-const
+	let v = $state(storeState);
+	const state = {
+		get value() {
+			return v;
+		},
+		set value(_v) {
+			throw new Error('You cannot set the value of a store directly');
+		},
 		hasCache: false
-	});
+	};
 	_storesMap.set(storeName, state);
 	if (options?.cache?.adapter) {
 		state.hasCache = true;
 		if (cacheModule) {
 			handleCacheOfNewStore(storeName, storeState, options);
 		} else {
-			import('./cache.js').then((module) => {
+			import('./cache.svelte.js').then((module) => {
 				cacheModule = module;
 				handleCacheOfNewStore(storeName, storeState, options);
 			});
@@ -90,8 +97,6 @@ function createState<T extends CoreState>(storeName: string, storeState: T, opti
 	}
 	return state;
 }
-
-3;
 
 /**
  * The function `createStore` creates a primitive store with a specified name and initial state.
@@ -115,18 +120,15 @@ export function createStorePrimitive<InferedState extends CoreState>(
 		throw new Error('Store name is required');
 	} else if (_storesMap.has(storeName) === true) {
 		throw new Error(`Store with name ${storeName} already exists, store names must be unique`);
+	} else if (!storeState) {
+		throw new Error('Store value is required');
 	}
 
-	let state: StoreState<InferedState>;
-	if (!storeState) {
-		throw new Error('Store value is required');
-	} else {
-		state = createState(storeName, storeState, options);
-	}
+	const state = createState(storeName, storeState, options);
 
 	return {
 		name: storeName,
-		get $value() {
+		get $state() {
 			return state.value;
 		}
 	};

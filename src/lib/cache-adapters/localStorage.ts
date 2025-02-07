@@ -1,18 +1,14 @@
-async function getFromCache<T>(key: string, decoder: (val: string) => any = JSON.parse) {
-	const val = localStorage.getItem(key);
-	return val ? (decoder(val) as T) : undefined;
-}
+import type { CacheAdapter } from '$lib/store/cache.svelte.js';
 
-function setToCache<T>(key: string, value: T, encoder: (val: any) => string = JSON.stringify) {
-	localStorage.setItem(key, encoder(value as unknown));
-}
-
-function deleteFromCache(key: string) {
-	localStorage.removeItem(key);
-}
-
-export const localStorageAdapter = {
-	getFromCache,
-	setToCache,
-	deleteFromCache
+export const localStorageAdapter: CacheAdapter = {
+	async get(key, decoder = JSON.parse) {
+		const val = localStorage.getItem(key);
+		return val ? decoder(val) : undefined;
+	},
+	async set(key, v, encoder = JSON.stringify) {
+		localStorage.setItem(key, encoder(v as unknown));
+	},
+	delete(key) {
+		localStorage.removeItem(key);
+	}
 };

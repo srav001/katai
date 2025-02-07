@@ -1,18 +1,20 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { PrimitiveStore } from '$lib/types/store.js';
 import { watch } from './primitives.svelte.js';
 
+export type CacheAdapter = {
+	get: <U>(key: string, decoder?: (val: string) => any) => Promise<U | undefined>;
+	set: (key: string, data: any, encoder?: (val: any) => string) => Promise<void>;
+	delete: (key: string) => void;
+};
+
 const CACHE_KEY = 'katai-';
 export type CacheOptons = {
-	adapter: {
-		getFromCache: <U>(key: string, decoder?: (val: string) => any) => Promise<U | undefined>;
-		setToCache: (key: string, data: any, encoder?: (val: any) => string) => void;
-		deleteFromCache: (key: string) => void;
-	};
+	adapter: CacheAdapter;
 	key?: string;
 	deep?: boolean;
 };
 
-// eslint-disable-next-line sonarjs/no-unused-collection
 const _cachedStoresMap = new Map<string, CacheOptons>();
 
 /**
@@ -50,7 +52,7 @@ export function handleCacheOfStore<T>(storeName: string, state: T) {
 	if (_cachedStoresMap.has(storeName)) {
 		const cacheOptions = _cachedStoresMap.get(storeName);
 		if (!cacheOptions?.deep && cacheOptions?.adapter) {
-			cacheOptions.adapter.setToCache(getCacheKey(storeName)!, state);
+			cacheOptions.adapter.set(getCacheKey(storeName)!, state);
 		}
 	}
 }
@@ -59,9 +61,9 @@ export function cacheDeeply<T>(store: PrimitiveStore<T>): (() => void) | undefin
 	if (_cachedStoresMap.has(store.name)) {
 		const cacheOptions = _cachedStoresMap.get(store.name);
 		if (cacheOptions?.deep === true) {
-			return watch(store, [() => $state.snapshot(store.$value)], ([state]) =>
-				cacheOptions.adapter.setToCache(getCacheKey(store.name)!, state)
-			);
+			return watch(store, [() => $state.snapshot(store.$state)], ([state]) => {
+				cacheOptions.adapter.set(getCacheKey(store.name)!, state);
+			});
 		}
 		return undefined;
 	}

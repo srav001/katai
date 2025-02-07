@@ -1,3 +1,2 @@
-export { createStore } from './basic.svelte.js';
-export { createVirtualStore } from './virtual-store.js';
+export { createStore } from './main.svelte.js';
 export { createWritable } from './writable.svelte.js';

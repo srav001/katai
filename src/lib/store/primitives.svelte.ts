@@ -1,8 +1,9 @@
 import type { PrimitiveStore } from '$lib/types/store.js';
+import type { DeepReadonly } from '$lib/types/utilities.js';
 import { onDestroy } from 'svelte';
-import { derived, sourceGet } from './svelte-internal/client.js';
 
-let cacheModule: typeof import('./cache.js');
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+let cacheModule: typeof import('./cache.svelte.js');
 
 type Getter<T> = () => T;
 /**
@@ -18,13 +19,13 @@ type Getter<T> = () => T;
  * value of type `U`. The value returned is the result of applying the `derivation` function to the
  * `store.value`.
  */
-export function get<T, U extends any, A>(store: PrimitiveStore<T>, getFn: (state: T, ...args: A[]) => U): Getter<U> {
-	return (...args: A[]) => $state.snapshot(getFn(store.$value, ...args));
+export function get<T, U, A>(store: PrimitiveStore<T>, getFn: (state: T, ...args: A[]) => U): Getter<U> {
+	return (...args: A[]) => $state.snapshot(getFn(store.$state, ...args)) as U;
 }
 
-type Computed<T> = {
-	$value: Readonly<T>;
-};
+type Computed<T> = DeepReadonly<{
+	$value: T;
+}>;
 /**
  * The `computed` function takes a store and a computation function, and returns a computed
  * value that is derived from the store's value.
@@ -38,33 +39,13 @@ type Computed<T> = {
  * returns the computed value. The `get $value()` method is a getter function that applies the
  * computation function to the store's value.
  */
-export function computed<T, U extends any>(store: PrimitiveStore<T>, computation: (state: T) => U): Computed<U> {
-	let state = $state() as U;
-
-	const effectToDestroy = $effect.root(() => {
-		$effect.pre(() => {
-			const value = computation(store.$value);
-			if ($state.is(state, value) === false) {
-				state = value;
-			}
-		});
-	});
-
-	try {
-		onDestroy(effectToDestroy);
-	} catch (err) {
-		if (
-			(err as any)?.message !==
-			`lifecycle_outside_component
-\`onDestroy(...)\` can only be used during component initialisation`
-		) {
-			throw err;
-		}
-	}
+export function computed<T, U>(store: PrimitiveStore<T>, computation: (state: T) => U): Computed<U> {
+	// eslint-disable-next-line prefer-const
+	let derive = $derived.by(() => computation(store.$state));
 
 	return {
 		get $value() {
-			return state;
+			return derive as DeepReadonly<U>;
 		}
 	};
 }
@@ -80,19 +61,19 @@ type Updater<T = undefined> = (...args: T[]) => void;
  * @returns The `update` function returns an `Updater` function that takes a value of type `C` as an
  * argument.
  */
-export function update<T, U extends any, C extends any = unknown>(
+export function update<T, U, C = unknown>(
 	store: PrimitiveStore<T>,
 	mutator: (state: T, ...args: C[]) => U
 ): Updater<C> {
 	return (...args: C[]) => {
-		mutator(store.$value, ...args);
+		mutator(store.$state, ...args);
 		if (store.name) {
 			if (cacheModule) {
-				cacheModule.handleCacheOfStore(store.name, store.$value);
+				cacheModule.handleCacheOfStore(store.name, store.$state);
 			} else {
-				import('./cache.js').then((module) => {
+				import('./cache.svelte.js').then((module) => {
 					cacheModule = module;
-					cacheModule.handleCacheOfStore(store.name, store.$value);
+					cacheModule.handleCacheOfStore(store.name, store.$state);
 				});
 			}
 		}
@@ -127,7 +108,7 @@ export function watch<T, U extends Watchers<T>>(
 		$effect(() => {
 			const states = [] as MapSources<U, T>;
 			for (const stateFn of subscribers) {
-				states.push(stateFn(store.$value));
+				states.push(stateFn(store.$state));
 			}
 			cleanUp = effect(states);
 		});
@@ -142,11 +123,8 @@ export function watch<T, U extends Watchers<T>>(
 	try {
 		onDestroy(effectToDestroy);
 	} catch (err) {
-		if (
-			(err as any)?.message !==
-			`lifecycle_outside_component
-\`onDestroy(...)\` can only be used during component initialisation`
-		) {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		if ((err as any)?.message.startsWith('lifecycle_outside_component') === false) {
 			throw err;
 		}
 	}
@@ -162,40 +140,14 @@ export function watch<T, U extends Watchers<T>>(
 export function clearCache(storeName: string): void {
 	if (cacheModule) {
 		if (cacheModule.getCachedStoresMap().has(storeName)) {
-			cacheModule
-				.getCachedStoresMap()
-				.get(storeName)
-				?.adapter.deleteFromCache(cacheModule.getCacheKey(storeName)!);
+			cacheModule.getCachedStoresMap().get(storeName)?.adapter.delete(cacheModule.getCacheKey(storeName)!);
 		}
 	} else {
-		import('./cache.js').then((module) => {
+		import('./cache.svelte.js').then((module) => {
 			cacheModule = module;
 			if (cacheModule.getCachedStoresMap().has(storeName)) {
-				cacheModule
-					.getCachedStoresMap()
-					.get(storeName)
-					?.adapter.deleteFromCache(cacheModule.getCacheKey(storeName)!);
+				cacheModule.getCachedStoresMap().get(storeName)?.adapter.delete(cacheModule.getCacheKey(storeName)!);
 			}
 		});
 	}
-}
-
-/**
- * This is only a experimental implementation to see use deriveds outside components
- * Won't be mostly kept as it uses svelte internals and it is not recommended
- */
-export function exp_derived<T, U>(store: PrimitiveStore<T>, derivation: (state: T) => U): [Computed<U>, () => void] {
-	let state = {} as Computed<U>;
-	const derivedEffect = $effect.root(() => {
-		const derive = derived(() => derivation(store.$value));
-		$effect.pre(() => {
-			state = {
-				get $value() {
-					return sourceGet(derive);
-				}
-			};
-		});
-	});
-
-	return [state, derivedEffect];
 }

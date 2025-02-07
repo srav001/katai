@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { createWritable } from '$lib/stores/writable.svelte.js';
-	import { derived } from 'svelte/store';
 	import { todosStore } from '../stores.svelte.js';
 
 	const tes = createWritable({
@@ -28,9 +27,7 @@
 	});
 
 	$effect(() => {
-		console.log('$effect');
-		console.log(todosStore.getIndex());
-		console.log('\n');
+		console.log('$effect', todosStore.getIndex());
 	});
 
 	function addTodo() {
@@ -46,6 +43,6 @@
 <button onclick={addTodo}>Add Todo</button>
 <br />
 
-derived - {todosStore.res1.$value} - {todosStore.res2.$value}
+derived - {todosStore.res1.$value}
 
 <button onclick={todosStore.increment}>INDEX {todosStore.getIndex()}</button>

@@ -14,5 +14,5 @@ export type BasicStore<T = TypesOfState> = {
 
 export type PrimitiveStore<T> = {
 	name: string;
-	$value: Readonly<T>;
+	$state: Readonly<T>;
 };

@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { StoreSettings } from '$lib/store/core.svelte.js';
 import {
 	clearCache,
 	computed,
-	exp_derived,
 	get,
 	update,
 	watch,
@@ -174,16 +174,6 @@ export function createStore<
 	if (options.actions !== undefined) {
 		for (const key in options.actions) {
 			ns[key] = update(ps, options.actions[key]);
-		}
-	}
-
-	// This is experimental and will mostly be removed since it uses svelte internals and it is not recommended
-	const deriveds = new WeakSet();
-	if (options.deriveds !== undefined) {
-		for (const key in options.deriveds) {
-			const [val, eff] = exp_derived(ps, options.deriveds![key]);
-			ns[key] = val;
-			deriveds.add(eff);
 		}
 	}
 

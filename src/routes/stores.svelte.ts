@@ -34,6 +34,21 @@ const samplePromise = () =>
 							id: crypto.randomUUID(),
 							title: 'test - '.concat(Date.now().toString()),
 							status: 'active'
+						},
+						{
+							id: crypto.randomUUID(),
+							title: 'test - '.concat(Date.now().toString()),
+							status: 'active'
+						},
+						{
+							id: crypto.randomUUID(),
+							title: 'test - '.concat(Date.now().toString()),
+							status: 'active'
+						},
+						{
+							id: crypto.randomUUID(),
+							title: 'test - '.concat(Date.now().toString()),
+							status: 'active'
 						}
 					],
 					index: 2
@@ -52,12 +67,8 @@ export const todosStore = createStore(
 			getIndex: (state) => state.index
 		},
 		computeds: {
-			res1: (state) => {
-				return state.index === 0 ? state.todos[0]?.id : state.todos[state.index - 1]?.id;
-			}
-		},
-		deriveds: {
-			res2: (state) => {
+			res1(state) {
+				console.log('running computeds');
 				return state.index === 0 ? state.todos[0]?.id : state.todos[state.index - 1]?.id;
 			}
 		},
