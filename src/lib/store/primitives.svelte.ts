@@ -1,9 +1,8 @@
-import type { PrimitiveStore } from '$lib/types/store.js';
+import type { PrimitiveStore } from '$lib/store/core.svelte.js';
+import type { CoreState } from '$lib/types/store.js';
 import type { DeepReadonly } from '$lib/types/utilities.js';
 import { onDestroy } from 'svelte';
-
-// eslint-disable-next-line @typescript-eslint/consistent-type-imports
-let cacheModule: typeof import('./cache.svelte.js');
+import { getCachedStoresMap, getCacheKey, handleCacheOfStore } from './cache.svelte.js';
 
 type Getter<T> = () => T;
 /**
@@ -19,7 +18,10 @@ type Getter<T> = () => T;
  * value of type `U`. The value returned is the result of applying the `derivation` function to the
  * `store.value`.
  */
-export function get<T, U, A>(store: PrimitiveStore<T>, getFn: (state: T, ...args: A[]) => U): Getter<U> {
+export function get<T extends CoreState, U, A>(
+	store: PrimitiveStore<T>,
+	getFn: (state: T, ...args: A[]) => U
+): Getter<U> {
 	return (...args: A[]) => $state.snapshot(getFn(store.$state, ...args)) as U;
 }
 
@@ -39,7 +41,7 @@ type Computed<T> = DeepReadonly<{
  * returns the computed value. The `get $value()` method is a getter function that applies the
  * computation function to the store's value.
  */
-export function computed<T, U>(store: PrimitiveStore<T>, computation: (state: T) => U): Computed<U> {
+export function computed<T extends CoreState, U>(store: PrimitiveStore<T>, computation: (state: T) => U): Computed<U> {
 	// eslint-disable-next-line prefer-const
 	let derive = $derived.by(() => computation(store.$state));
 
@@ -61,21 +63,14 @@ type Updater<T = undefined> = (...args: T[]) => void;
  * @returns The `update` function returns an `Updater` function that takes a value of type `C` as an
  * argument.
  */
-export function update<T, U, C = unknown>(
+export function update<T extends CoreState, U, C = unknown>(
 	store: PrimitiveStore<T>,
 	mutator: (state: T, ...args: C[]) => U
 ): Updater<C> {
 	return (...args: C[]) => {
 		mutator(store.$state, ...args);
 		if (store.name) {
-			if (cacheModule) {
-				cacheModule.handleCacheOfStore(store.name, store.$state);
-			} else {
-				import('./cache.svelte.js').then((module) => {
-					cacheModule = module;
-					cacheModule.handleCacheOfStore(store.name, store.$state);
-				});
-			}
+			handleCacheOfStore(store.name, store.$state);
 		}
 	};
 }
@@ -98,7 +93,7 @@ export type MapSources<T, U> = {
  * @returns The `watch` function returns a cleanup function that can be used to unwatch the
  * effect and remove it from the list of watchers.
  */
-export function watch<T, U extends Watchers<T>>(
+export function watch<T extends CoreState, U extends Watchers<T>>(
 	store: PrimitiveStore<T>,
 	subscribers: [...U],
 	effect: (states: MapSources<U, T>) => void | (() => void)
@@ -138,16 +133,7 @@ export function watch<T, U extends Watchers<T>>(
  * represents the name of the store for which you want to clear the cache.
  */
 export function clearCache(storeName: string): void {
-	if (cacheModule) {
-		if (cacheModule.getCachedStoresMap().has(storeName)) {
-			cacheModule.getCachedStoresMap().get(storeName)?.adapter.delete(cacheModule.getCacheKey(storeName)!);
-		}
-	} else {
-		import('./cache.svelte.js').then((module) => {
-			cacheModule = module;
-			if (cacheModule.getCachedStoresMap().has(storeName)) {
-				cacheModule.getCachedStoresMap().get(storeName)?.adapter.delete(cacheModule.getCacheKey(storeName)!);
-			}
-		});
+	if (getCachedStoresMap().has(storeName)) {
+		getCachedStoresMap().get(storeName)?.adapter.delete(getCacheKey(storeName)!);
 	}
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { GenericArray, GenericObject, PrimitiveTypes } from './utilities.js';
 
 export type CoreState = Record<string, any>;
@@ -12,7 +13,7 @@ export type BasicStore<T = TypesOfState> = {
 	state: T;
 };
 
-export type PrimitiveStore<T> = {
-	name: string;
-	$state: Readonly<T>;
-};
+// export type StorePrimitve<T> = {
+// 	name: string;
+// 	$state: Readonly<T>;
+// };

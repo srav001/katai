@@ -1,52 +1,33 @@
-import { createStorePrimitive, type StoreSettings } from '../store/core.svelte.js';
-import { clearCache, get, update, watch } from '../store/primitives.svelte.js';
-
-// BASED ON SVELTE WRITABLE STORE
+import { PrimitiveStore, type StoreSettings } from '../store/core.svelte.js';
+import { update, watch } from '../store/primitives.svelte.js';
 
 /**
- * The `createWritable` function creates a writable store with initial value and provides
- * methods for getting, setting, updating, subscribing to changes, and clearing cache.
- * @param {T} initalValue - The `initalValue` parameter is the initial value that will be stored in the
- * writable store. It should be an object of type `T`, which extends `Record<string, any>`. This
- * initial value will be used as the starting value for the store.
- * @param storeName - The `storeName` parameter is a string that represents the name of the store where
- * the data will be stored. If no `storeName` is provided, a random string will be generated for the
+ * Based on the writable store from Svelte.
+ * @param initalValue - The initial value that will be stored in the store.
+ * @param storeName - Optional. If no `storeName` is provided, a random string will be generated for the
  * store name.
- * @param {StoreSettings} [storeOptions] - The `storeOptions` parameter in the `createWritable` function
- * is an optional parameter that allows you to specify additional options for the store creation. These
- * options can include configuration settings or options specific to the underlying store
- * implementation. If provided, these options will be used when creating the store using the `create
+ * @param storeOptions - An optional parameter that allows you to specify additional options for the store creation.
+ * These options can include configuration settings for cache and more.
  * @returns An object is being returned with the following properties:
- * - get: a function that retrieves the current value from the store
- * - set: a function that updates the value in the store
- * - update: a function that takes a callback to update the value in the store
- * - subscribe: a function that subscribes to changes in the store and calls a subscriber function
- * - clearCache: a function that
+ * - `get`: a function that retrieves the current value from the store
+ * - `set`: a function that updates the value in the store
+ * - `update`: a function that takes a callback to update the value in the store
+ * - `subscribe`: a function that subscribes to changes in the store and calls a subscriber function
  */
-export function createWritable<T extends Record<string, any>>(
-	initalValue: T,
-	storeName = Math.random().toString(36).substring(2, 15),
-	storeOptions?: StoreSettings
-) {
-	const store = createStorePrimitive(storeName, initalValue, storeOptions);
+export function createWritable<T>(initalValue: T, storeName = crypto.randomUUID(), storeOptions?: StoreSettings) {
+	const store = new PrimitiveStore(storeName, { v: initalValue }, storeOptions);
 
 	const updater = update(store, (state, val: T) => {
-		state = val;
+		state.v = val;
 	});
 
 	return {
-		get: get(store, () => store.$state),
-		set: update(store, (state, val: T) => {
-			Object.assign(state, val);
-		}),
-		update: (callback: (val: T) => T) => {
-			updater(callback(store.$state));
+		get: () => store.$state,
+		set: updater,
+		update(callback: (val: T) => T) {
+			updater(callback(store.$state.v));
 		},
 		subscribe: (subscriber: (val: T) => void) =>
-			watch(store, [() => $state.snapshot(store.$state) as T], ([state]) => subscriber(state)),
-		clearCache() {
-			clearCache(storeName);
-		},
-		store
+			watch(store, [() => $state.snapshot(store.$state.v) as T], ([s]) => subscriber(s))
 	};
 }

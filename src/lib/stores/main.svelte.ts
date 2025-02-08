@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { createMemoryAdapter } from '$lib/cache-adapters/memory.js';
 import type { StoreSettings } from '$lib/store/core.svelte.js';
 import {
 	clearCache,
@@ -9,80 +10,25 @@ import {
 	type MapSources,
 	type Watchers
 } from '$lib/store/primitives.svelte.js';
+import type {
+	Actions,
+	Computeds,
+	Getters,
+	QueryOptions,
+	State,
+	StoreOptions,
+	StoreWithGettersAndActions
+} from '$lib/types/main.js';
 import type { CoreState } from '$lib/types/store.js';
-import type { DeepReadonly } from '$lib/types/utilities.js';
 import { onDestroy } from 'svelte';
-import { createStorePrimitive, storeSetter } from '../store/core.svelte.js';
-
-export type State = Record<string | number, any>;
-
-type Action<T> = (state: T, ...args: any[]) => void;
-export type Actions<T> = Record<string, Action<T>>;
-
-type Getter<T> = (state: T, ...args: any[]) => any;
-
-export type Getters<T> = Record<string, Getter<T>>;
-
-type GetValue<T> = (state: T) => any;
-export type Computeds<T> = Record<string, GetValue<T>>;
-
-type Query<T, U = any> = (...args: U[]) => Promise<T>;
-
-type QueryOptions<T> = {
-	loader?: {
-		fn: Query<T>;
-		onInit?: boolean;
-	};
-	onData?: <U>(val: U) => T;
-};
-
-type Deriveds<T> = Record<string, GetValue<T>>;
-
-export type StoreOptions<
-	S extends State,
-	G extends Getters<S>,
-	A extends Actions<S>,
-	C extends Computeds<S>,
-	D extends Deriveds<S>
-> = {
-	getters?: G;
-	computeds?: C;
-	actions?: A;
-	deriveds?: D;
-	query?: QueryOptions<S>;
-};
-
-export type StoreWithGettersAndActions<
-	S extends State,
-	G extends Getters<S>,
-	A extends Actions<S>,
-	C extends Computeds<S>,
-	D extends Deriveds<S>
-> = {
-	[K in keyof G]: G[K] extends (state: any, ...args: infer Y) => infer R ? (...args: Y) => R : never;
-} & {
-	[K in keyof A]: A[K] extends (state: any, ...args: infer Y) => void ? (...args: Y) => void : never;
-} & {
-	[K in keyof C]: C[K] extends (state: any) => infer R
-		? DeepReadonly<{
-				$value: R;
-			}>
-		: never;
-} & {
-	[K in keyof D]: D[K] extends (state: any) => infer R
-		? DeepReadonly<{
-				$value: R;
-			}>
-		: never;
-};
+import { PrimitiveStore, storeSetter } from '../store/core.svelte.js';
 
 type BasicStore<
 	S extends State,
 	G extends Getters<S>,
 	A extends Actions<S>,
-	C extends Computeds<S>,
-	D extends Deriveds<S>
-> = StoreWithGettersAndActions<S, G, A, C, D> & {
+	C extends Computeds<S>
+> = StoreWithGettersAndActions<S, G, A, C> & {
 	$subscribe: <Sub extends Watchers<S>>(subscribers: Sub, effect: (states: MapSources<Sub, S>) => void) => () => void;
 	$onData: <T>(data: T) => void;
 	load?: <T>(...args: T[]) => Promise<void>;
@@ -140,19 +86,25 @@ function handleIfQuery<T extends CoreState>(name: string, ns: any, qo: QueryOpti
  * @returns The `createBasicStore` function returns an object of type `BasicStore<S, G, A>`, which
  * includes the state, getters, actions, and additional methods like `clearCache` and `subscribe`.
  */
-export function createStore<
-	S extends State,
-	G extends Getters<S>,
-	A extends Actions<S>,
-	C extends Computeds<S>,
-	D extends Deriveds<S>
->(
+export function createStore<S extends State, G extends Getters<S>, A extends Actions<S>, C extends Computeds<S>>(
 	storeName: string,
 	state: S,
-	options: StoreOptions<S, G, A, C, D>,
+	options: StoreOptions<S, G, A, C>,
 	settings?: StoreSettings
-): BasicStore<S, G, A, C, D> {
-	const ps = createStorePrimitive(storeName, state, settings);
+): BasicStore<S, G, A, C> {
+	if (!settings) {
+		settings = {
+			cache: {
+				adapter: createMemoryAdapter()
+			}
+		};
+	} else if (!settings?.cache || !settings.cache.adapter) {
+		settings.cache = {
+			adapter: createMemoryAdapter()
+		};
+	}
+
+	const ps = new PrimitiveStore(storeName, state, settings);
 
 	const ns = {
 		$onData() {

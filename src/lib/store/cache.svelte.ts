@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { PrimitiveStore } from '$lib/types/store.js';
+import type { CoreState } from '$lib/types/store.js';
+import type { PrimitiveStore } from './core.svelte.js';
 import { watch } from './primitives.svelte.js';
 
 export type CacheAdapter = {
@@ -57,7 +58,7 @@ export function handleCacheOfStore<T>(storeName: string, state: T) {
 	}
 }
 
-export function cacheDeeply<T>(store: PrimitiveStore<T>): (() => void) | undefined {
+export function cacheDeeply<T extends CoreState>(store: PrimitiveStore<T>): (() => void) | undefined {
 	if (_cachedStoresMap.has(store.name)) {
 		const cacheOptions = _cachedStoresMap.get(store.name);
 		if (cacheOptions?.deep === true) {
