@@ -3,7 +3,7 @@ import type { GenericArray, GenericObject, PrimitiveTypes } from './utilities.js
 
 export type CoreState = Record<string, any>;
 export type StoreState<T extends CoreState> = {
-	value: T;
+	v: T;
 	hasCache: boolean;
 };
 

@@ -5,7 +5,7 @@ import {
 	clearCache,
 	computed,
 	get,
-	update,
+	setter,
 	watch,
 	type MapSources,
 	type Watchers
@@ -125,7 +125,7 @@ export function createStore<S extends State, G extends Getters<S>, A extends Act
 	}
 	if (options.actions !== undefined) {
 		for (const key in options.actions) {
-			ns[key] = update(ps, options.actions[key]);
+			ns[key] = setter(ps, options.actions[key]);
 		}
 	}
 

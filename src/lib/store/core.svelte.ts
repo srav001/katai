@@ -7,43 +7,15 @@ export type StoreSettings = {
 	cache?: CacheOptons;
 };
 
-export class PrimitiveStore<InferedState extends CoreState> {
-	private state: StoreState<InferedState>;
+export class PrimitiveStore<T extends CoreState> {
+	private state = $state({
+		v: {} as T,
+		hasCache: false
+	});
+	$state: T;
 	name: string;
 
-	constructor(storeName: string, storeState: InferedState, options?: StoreSettings) {
-		if (!storeName) {
-			throw new Error('Store name is required');
-		} else if (_storesMap.has(storeName) === true) {
-			throw new Error(`Store with name ${storeName} already exists, store names must be unique`);
-		} else if (!storeState) {
-			throw new Error('Store value is required');
-		}
-
-		this.name = storeName;
-		this.state = this.createState(storeName, storeState, options);
-	}
-
-	private createState(
-		storeName: string,
-		storeState: InferedState,
-		options?: StoreSettings
-	): StoreState<InferedState> {
-		const state = {
-			value: $state(storeState),
-			hasCache: false
-		};
-		_storesMap.set(storeName, state);
-		if (options?.cache?.adapter) {
-			state.hasCache = true;
-			this.handleCacheOfNewStore(storeName, storeState, options);
-		} else if (options?.cache?.key && !options?.cache?.adapter) {
-			throw new Error(`Cache adapter is not provided for ${storeName} Store`);
-		}
-		return state;
-	}
-
-	private handleCacheOfNewStore(storeName: string, storeState: InferedState, options: StoreSettings) {
+	private handleCacheOfNewStore(storeName: string, storeState: T, options: StoreSettings) {
 		if (!options?.cache?.key) {
 			options.cache!.key = storeName;
 		}
@@ -56,26 +28,43 @@ export class PrimitiveStore<InferedState extends CoreState> {
 				typeof data === 'object' &&
 				((!Array.isArray(data) && Object.keys(data).length > 0) || (Array.isArray(data) && data.length > 0))
 			) {
-				_storesMap.get(storeName)!.value = data;
+				_storesMap.get(storeName)!.v = data;
 			} else {
 				options.cache?.adapter.set(cacheKey, storeState);
 			}
 		});
 	}
 
-	get $state(): InferedState {
-		return this.state.value;
+	private assignState(storeName: string, options?: StoreSettings) {
+		_storesMap.set(storeName, this.state);
+		if (options?.cache?.adapter) {
+			this.state.hasCache = true;
+			this.handleCacheOfNewStore(storeName, this.state.v, options);
+		} else if (options?.cache?.key && !options?.cache?.adapter) {
+			throw new Error(`Cache adapter is not provided for ${storeName} Store`);
+		}
 	}
 
-	set $state(_v) {
-		throw new Error('You cannot set the value of a store directly');
+	constructor(storeName: string, storeState: T, options?: StoreSettings) {
+		if (!storeName) {
+			throw new Error('Store name is required');
+		} else if (_storesMap.has(storeName) === true) {
+			throw new Error(`Store with name ${storeName} already exists, store names must be unique`);
+		} else if (!storeState) {
+			throw new Error('Store value is required');
+		}
+
+		this.name = storeName;
+		this.state.v = storeState;
+		this.$state = this.state.v;
+		this.assignState(storeName, options);
 	}
 }
 
 export function storeSetter<T extends CoreState>(storeName: string, storeState: T) {
 	const store = _storesMap.get(storeName);
 	if (store !== undefined) {
-		_storesMap.get(storeName)!.value = storeState;
+		_storesMap.get(storeName)!.v = storeState;
 		if (store.hasCache === true) {
 			handleCacheOfStore(storeName, storeState);
 		}

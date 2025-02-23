@@ -1,7 +1,7 @@
 import type { PrimitiveStore } from '$lib/store/core.svelte.js';
 import type { CoreState } from '$lib/types/store.js';
 import type { DeepReadonly } from '$lib/types/utilities.js';
-import { onDestroy } from 'svelte';
+import { onDestroy, untrack } from 'svelte';
 import { getCachedStoresMap, getCacheKey, handleCacheOfStore } from './cache.svelte.js';
 
 type Getter<T> = () => T;
@@ -22,7 +22,14 @@ export function get<T extends CoreState, U, A>(
 	store: PrimitiveStore<T>,
 	getFn: (state: T, ...args: A[]) => U
 ): Getter<U> {
-	return (...args: A[]) => $state.snapshot(getFn(store.$state, ...args)) as U;
+	return (...args: A[]) =>
+		untrack(() => {
+			const v = getFn(store.$state, ...args) as U;
+			if (typeof v === 'object' && v !== null) {
+				return $state.snapshot(v) as U;
+			}
+			return v;
+		});
 }
 
 type Computed<T> = DeepReadonly<{
@@ -52,7 +59,7 @@ export function computed<T extends CoreState, U>(store: PrimitiveStore<T>, compu
 	};
 }
 
-type Updater<T = undefined> = (...args: T[]) => void;
+type Setter<T = undefined> = (...args: T[]) => void;
 /**
  * The function `update` takes a store, a mutator function, and a payload, and updates the store's
  * value using the mutator function while handling caching if applicable.
@@ -63,10 +70,10 @@ type Updater<T = undefined> = (...args: T[]) => void;
  * @returns The `update` function returns an `Updater` function that takes a value of type `C` as an
  * argument.
  */
-export function update<T extends CoreState, U, C = unknown>(
+export function setter<T extends CoreState, U, C = unknown>(
 	store: PrimitiveStore<T>,
 	mutator: (state: T, ...args: C[]) => U
-): Updater<C> {
+): Setter<C> {
 	return (...args: C[]) => {
 		mutator(store.$state, ...args);
 		if (store.name) {
@@ -118,8 +125,7 @@ export function watch<T extends CoreState, U extends Watchers<T>>(
 	try {
 		onDestroy(effectToDestroy);
 	} catch (err) {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		if ((err as any)?.message.startsWith('lifecycle_outside_component') === false) {
+		if ((err as Error)?.message.startsWith('lifecycle_outside_component') === false) {
 			throw err;
 		}
 	}
